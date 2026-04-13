@@ -1304,10 +1304,15 @@ return buildPDFHTML('Monthly Report — '+monthName,body);
 }
 function b64(str){return btoa(unescape(encodeURIComponent(str)));}
 function downloadDoc(filename,html){
-  if((window.median && window.median.share) || (window.gonative && window.gonative.share)){
-    const b64Data = b64(html);
-    if(window.median) window.median.share.shareFile({filename: filename, base64: b64Data, mimeType: 'application/msword'});
-    else window.gonative.share.shareFile({filename: filename, base64: b64Data, mimeType: 'application/msword'});
+  const isNative = (window.median || window.gonative);
+  if(isNative){
+    showToast('APK: File taiyar ho rahi hai...', '#3b82f6');
+    try {
+      const b64Data = b64(html);
+      if(window.median && window.median.share) window.median.share.shareFile({filename: filename, base64: b64Data, mimeType: 'application/msword'});
+      else if(window.gonative && window.gonative.share) window.gonative.share.shareFile({filename: filename, base64: b64Data, mimeType: 'application/msword'});
+      else showToast('APK: Share plugin nahi mila!', '#ef4444');
+    } catch(e) { showToast('APK Error: ' + e.message, '#ef4444'); }
   } else {
     const blob = new Blob([html], {type:'application/msword'});
     const url = URL.createObjectURL(blob);
@@ -1317,9 +1322,18 @@ function downloadDoc(filename,html){
   }
 }
 function openPrintWindow(html,title){
-  if((window.median && window.median.print) || (window.gonative && window.gonative.print)){
-    if(window.median) window.median.print.printHTML({html: html});
-    else window.gonative.print.printHTML({html: html});
+  const isNative = (window.median || window.gonative);
+  if(isNative){
+    showToast('APK: Print chalu ho raha hai...', '#3b82f6');
+    try {
+      if(window.median && window.median.print) window.median.print.printHTML({html: html});
+      else if(window.gonative && window.gonative.print) window.gonative.print.printHTML({html: html});
+      else {
+        showToast('APK: Print plugin nahi mila! Save try kar rahe...', '#fb923c');
+        const b64Data = b64(html);
+        if(window.median && window.median.share) window.median.share.shareFile({filename: title + '.html', base64: b64Data, mimeType: 'text/html'});
+      }
+    } catch(e) { showToast('APK Error: ' + e.message, '#ef4444'); }
   } else {
     const blob = new Blob([html], {type:'text/html'});
     const url = URL.createObjectURL(blob);
