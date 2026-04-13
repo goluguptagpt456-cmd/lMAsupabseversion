@@ -1319,7 +1319,7 @@ function downloadDoc(filename,html){
       const b64Data = b64(html);
       const bridge = window.median || window.gonative;
       if(bridge && bridge.share) bridge.share.shareFile({filename: filename, base64: b64Data, mimeType: 'application/msword'});
-      else showToast('APK: Share plugin nahi mila!', '#ef4444');
+      else showToast('APK: Share plugin enabled nahi hai.', '#ef4444');
     } catch(e) { showToast('APK Error: ' + e.message, '#ef4444'); }
   } else {
     const blob = new Blob([html], {type:'application/msword'});
@@ -1332,11 +1332,6 @@ function downloadDoc(filename,html){
 function openPrintWindow(html,title){
   const isAPK = (window.median || window.gonative || (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.median));
   if(isAPK){
-    showToast('APK: Print chalu...', '#3b82f6');
-    try {
-      const bridge = window.median || window.gonative;
-      if(bridge && bridge.print) bridge.print.printHTML({html: html});
-      else if(bridge && bridge.share) {
         showToast('Print plugin nahi, Share try...', '#fb923c');
         bridge.share.shareFile({filename: title + '.html', base64: b64(html), mimeType: 'text/html'});
       } else { showToast('APK: Bridge missing.', '#ef4444'); }
