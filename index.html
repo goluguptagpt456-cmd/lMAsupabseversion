@@ -1321,9 +1321,12 @@ if(window.median && window.median.print){
 } else if(window.gonative && window.gonative.print){
   window.gonative.print.printHTML({html: html});
 } else {
-  const dataUrl = 'data:text/html;base64,' + b64(html);
-  const win = window.open(dataUrl, '_blank');
-  if(!win){
+  const win = window.open('', '_blank');
+  if(win){
+    win.document.write(html);
+    win.document.close();
+  } else {
+    const dataUrl = 'data:text/html;base64,' + b64(html);
     const a = document.createElement('a');
     a.href = dataUrl;
     a.target = '_blank';
