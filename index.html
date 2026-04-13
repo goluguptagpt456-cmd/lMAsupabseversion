@@ -1304,43 +1304,38 @@ return buildPDFHTML('Monthly Report — '+monthName,body);
 }
 function b64(str){return btoa(unescape(encodeURIComponent(str)));}
 function downloadDoc(filename,html){
-const b64Data = b64(html);
-const dataUrl = 'data:application/msword;base64,' + b64Data;
-if(window.median && window.median.share){
-  window.median.share.shareFile({filename: filename, base64: b64Data, mimeType: 'application/msword'});
-} else if(window.gonative && window.gonative.share){
-  window.gonative.share.shareFile({filename: filename, base64: b64Data, mimeType: 'application/msword'});
-} else {
-  const a=document.createElement('a');a.href=dataUrl;a.download=filename;
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-}
-}
-function openPrintWindow(html,title){
-if(window.median && window.median.print){
-  window.median.print.printHTML({html: html});
-} else if(window.gonative && window.gonative.print){
-  window.gonative.print.printHTML({html: html});
-} else {
-  const win = window.open('', '_blank');
-  if(win){
-    win.document.write(html);
-    win.document.close();
+  if((window.median && window.median.share) || (window.gonative && window.gonative.share)){
+    const b64Data = b64(html);
+    if(window.median) window.median.share.shareFile({filename: filename, base64: b64Data, mimeType: 'application/msword'});
+    else window.gonative.share.shareFile({filename: filename, base64: b64Data, mimeType: 'application/msword'});
   } else {
-    const dataUrl = 'data:text/html;base64,' + b64(html);
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const blob = new Blob([html], {type:'application/msword'});
+    const url = URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=filename;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
   }
 }
+function openPrintWindow(html,title){
+  if((window.median && window.median.print) || (window.gonative && window.gonative.print)){
+    if(window.median) window.median.print.printHTML({html: html});
+    else window.gonative.print.printHTML({html: html});
+  } else {
+    const blob = new Blob([html], {type:'text/html'});
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, '_blank');
+    if(!win){
+      const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+  }
 }
 function downloadFile(name,content,type){
-const dataUrl = 'data:' + type + ';base64,' + b64(content);
-const a=document.createElement('a');a.href=dataUrl;a.download=name;
-document.body.appendChild(a);a.click();document.body.removeChild(a);
+  const blob = new Blob([content], {type:type});
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=name;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function testCloudConnection(){
   showToast('Test ho raha hai...','#3b82f6');
