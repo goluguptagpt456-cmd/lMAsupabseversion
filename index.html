@@ -1249,7 +1249,7 @@ return`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${title}</title>
   if(btn)btn.style.display='block';
 };<\/script></head><body>
 <div id="dl-btn" style="display:none;width:100%;padding:16px;box-sizing:border-box;position:sticky;top:0;z-index:9999;background:#1a1a2e;border-bottom:2px solid #3b82f6;text-align:center">
-<button ontouchstart="" onclick="window.print()" style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border:none;border-radius:12px;padding:16px 32px;font-size:16px;font-weight:800;cursor:pointer;width:80%;max-width:300px;-webkit-tap-highlight-color:transparent;touch-action:manipulation">🖨️ Print / Save PDF</button>
+<button ontouchstart="" onclick="if(window.median){window.median.print.print();}else if(window.gonative){window.gonative.print.print();}else{window.print();}" style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border:none;border-radius:12px;padding:16px 32px;font-size:16px;font-weight:800;cursor:pointer;width:80%;max-width:300px;-webkit-tap-highlight-color:transparent;touch-action:manipulation">🖨️ Print / Save PDF</button>
 </div>
 ${body}</body></html>`;
 }
@@ -1302,34 +1302,41 @@ ${monthPayments.length>0?`<div class="${mode==='pdf'?'sec-title':''}">💳 Payme
 if(mode==='doc')return buildDocHTML('Monthly Report — '+monthName,body);
 return buildPDFHTML('Monthly Report — '+monthName,body);
 }
+function b64(str){return btoa(unescape(encodeURIComponent(str)));}
 function downloadDoc(filename,html){
-const blob=new Blob(['\ufeff'+html],{type:'application/msword'});
-const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;
-document.body.appendChild(a);a.click();document.body.removeChild(a);
+const b64Data = b64(html);
+const dataUrl = 'data:application/msword;base64,' + b64Data;
+if(window.median && window.median.share){
+  window.median.share.shareFile({filename: filename, base64: b64Data, mimeType: 'application/msword'});
+} else if(window.gonative && window.gonative.share){
+  window.gonative.share.shareFile({filename: filename, base64: b64Data, mimeType: 'application/msword'});
+} else {
+  const a=document.createElement('a');a.href=dataUrl;a.download=filename;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
 }
 function openPrintWindow(html,title){
-// Blob URL banao
-const blob = new Blob([html], {type:'text/html'});
-const blobUrl = URL.createObjectURL(blob);
-// Android Chrome intent se open karo (Median APK ke liye)
-const chromeIntent = 'intent://' + blobUrl.replace(/^blob:https?:\/\/[^/]+/, '') + '#Intent;scheme=blob;package=com.android.chrome;end';
-// Try: pehle direct window.open, agar fail to Chrome intent
-const win = window.open(blobUrl, '_blank');
-if(!win){
-  // Median WebView mein window.open block hota hai — Chrome pe bhejo
-  const a = document.createElement('a');
-  a.href = blobUrl;
-  a.target = '_blank';
-  a.rel = 'noopener';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+if(window.median && window.median.print){
+  window.median.print.printHTML({html: html});
+} else if(window.gonative && window.gonative.print){
+  window.gonative.print.printHTML({html: html});
+} else {
+  const dataUrl = 'data:text/html;base64,' + b64(html);
+  const win = window.open(dataUrl, '_blank');
+  if(!win){
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
 }
-setTimeout(()=> URL.revokeObjectURL(blobUrl), 30000);
 }
 function downloadFile(name,content,type){
-const blob=new Blob([content],{type});
-const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+const dataUrl = 'data:' + type + ';base64,' + b64(content);
+const a=document.createElement('a');a.href=dataUrl;a.download=name;
 document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 function testCloudConnection(){
