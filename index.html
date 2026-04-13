@@ -1343,13 +1343,13 @@ function openPrintWindow(html,title){
       } else { showToast('APK: Bridge plugins missing.', '#ef4444'); }
     } catch(e) { showToast('APK Error: ' + e.message, '#ef4444'); }
   } else {
-    showToast('Browser: Print dialog...', '#3b82f6');
-    const area = document.getElementById('print-area');
-    area.innerHTML = html;
-    setTimeout(function(){
-      window.print();
-      area.innerHTML = '';
-    }, 500);
+    showToast('Browser: Print Mode chalu... ⏳', '#3b82f6');
+    // HTML content ko safe-keep karein
+    localStorage.setItem('print_html_content', html);
+    // Page reload karein flag ke saath
+    const url = new URL(window.location.href);
+    url.searchParams.set('print', 'true');
+    window.location.href = url.toString();
   }
 }function downloadFile(name,content,type){
   const blob = new Blob([content], {type:type});
@@ -1628,7 +1628,33 @@ renderPage();
 };
 openModal('modal-confirm');
 }
-checkSession();
+function checkPrintMode(){
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('print') === 'true'){
+    const html = localStorage.getItem('print_html_content');
+    if(html){
+      const area = document.getElementById('print-area');
+      area.innerHTML = html;
+      // Image ki tarah 700ms ka delay
+      setTimeout(function(){
+        window.print();
+        // Print ke baad cleanup
+        setTimeout(function(){
+          area.innerHTML = '';
+          localStorage.removeItem('print_html_content');
+          const url = new URL(window.location.href);
+          url.searchParams.delete('print');
+          window.location.href = url.toString();
+        }, 1000);
+      }, 700);
+      return true; // Print mode active hai
+    }
+  }
+  return false;
+}
+if(!checkPrintMode()){
+  checkSession();
+}
 </script>
 </body>
 </html>
