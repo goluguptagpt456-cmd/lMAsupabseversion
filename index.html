@@ -1332,12 +1332,18 @@ function downloadDoc(filename,html){
 function openPrintWindow(html,title){
   const isAPK = (window.median || window.gonative || (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.median));
   if(isAPK){
-        showToast('Print plugin nahi, Share try...', '#fb923c');
-        bridge.share.shareFile({filename: title + '.html', base64: b64(html), mimeType: 'text/html'});
-      } else { showToast('APK: Bridge missing.', '#ef4444'); }
+    showToast('APK: Export menu...', '#3b82f6');
+    try {
+      const bridge = window.median || window.gonative;
+      const b64Data = b64(html);
+      if(bridge && bridge.share) {
+        bridge.share.shareFile({filename: title + '.html', base64: b64Data, mimeType: 'text/html'});
+      } else if(bridge && bridge.print) {
+        bridge.print.printHTML({html: html});
+      } else { showToast('APK: Bridge plugins missing.', '#ef4444'); }
     } catch(e) { showToast('APK Error: ' + e.message, '#ef4444'); }
   } else {
-    showToast('Browser: Print dialog taiyar ho raha hai...', '#3b82f6');
+    showToast('Browser: Print dialog...', '#3b82f6');
     const area = document.getElementById('print-area');
     area.innerHTML = html;
     setTimeout(function(){
