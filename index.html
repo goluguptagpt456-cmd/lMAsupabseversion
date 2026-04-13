@@ -1304,13 +1304,13 @@ return buildPDFHTML('Monthly Report — '+monthName,body);
 }
 function b64(str){return btoa(unescape(encodeURIComponent(str)));}
 function downloadDoc(filename,html){
-  const isNative = (window.median || window.gonative);
-  if(isNative){
+  const isAPK = (window.median || window.gonative || (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.median));
+  if(isAPK){
     showToast('APK: File taiyar ho rahi hai...', '#3b82f6');
     try {
       const b64Data = b64(html);
-      if(window.median && window.median.share) window.median.share.shareFile({filename: filename, base64: b64Data, mimeType: 'application/msword'});
-      else if(window.gonative && window.gonative.share) window.gonative.share.shareFile({filename: filename, base64: b64Data, mimeType: 'application/msword'});
+      const bridge = window.median || window.gonative;
+      if(bridge && bridge.share) bridge.share.shareFile({filename: filename, base64: b64Data, mimeType: 'application/msword'});
       else showToast('APK: Share plugin nahi mila!', '#ef4444');
     } catch(e) { showToast('APK Error: ' + e.message, '#ef4444'); }
   } else {
@@ -1318,30 +1318,36 @@ function downloadDoc(filename,html){
     const url = URL.createObjectURL(blob);
     const a=document.createElement('a');a.href=url;a.download=filename;
     document.body.appendChild(a);a.click();document.body.removeChild(a);
-    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
   }
 }
 function openPrintWindow(html,title){
-  const isNative = (window.median || window.gonative);
-  if(isNative){
-    showToast('APK: Print chalu ho raha hai...', '#3b82f6');
+  const isAPK = (window.median || window.gonative || (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.median));
+  if(isAPK){
+    showToast('APK: Native Print chalu...', '#3b82f6');
     try {
-      if(window.median && window.median.print) window.median.print.printHTML({html: html});
-      else if(window.gonative && window.gonative.print) window.gonative.print.printHTML({html: html});
-      else {
-        showToast('APK: Print plugin nahi mila! Save try kar rahe...', '#fb923c');
-        const b64Data = b64(html);
-        if(window.median && window.median.share) window.median.share.shareFile({filename: title + '.html', base64: b64Data, mimeType: 'text/html'});
+      const bridge = window.median || window.gonative;
+      if(bridge && bridge.print) bridge.print.printHTML({html: html});
+      else if(bridge && bridge.share) {
+        showToast('Print plugin nahi mila, Share try...', '#fb923c');
+        bridge.share.shareFile({filename: title + '.html', base64: b64(html), mimeType: 'text/html'});
+      } else {
+        showToast('APK: Bridge not fully ready.', '#ef4444');
       }
     } catch(e) { showToast('APK Error: ' + e.message, '#ef4444'); }
   } else {
-    const blob = new Blob([html], {type:'text/html'});
-    const url = URL.createObjectURL(blob);
-    const win = window.open(url, '_blank');
-    if(!win){
-      const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener';
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    }
+    showToast('Browser: Print dialog taiyar...', '#3b82f6');
+    const iframe = document.createElement('iframe');
+    iframe.style.visibility = 'hidden'; iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0';
+    iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = '0';
+    document.body.appendChild(iframe);
+    iframe.contentWindow.document.write(html);
+    iframe.contentWindow.document.close();
+    setTimeout(function(){
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      setTimeout(function(){ document.body.removeChild(iframe); }, 1000);
+    }, 500);
   }
 }
 function downloadFile(name,content,type){
@@ -1349,7 +1355,7 @@ function downloadFile(name,content,type){
   const url = URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download=name;
   document.body.appendChild(a);a.click();document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
 function testCloudConnection(){
   showToast('Test ho raha hai...','#3b82f6');
