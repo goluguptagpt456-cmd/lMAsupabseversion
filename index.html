@@ -1246,11 +1246,10 @@ return`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${title}</title>
   var isAndroid=ua.indexOf('Android')>-1;
   if(!isAndroid){window.print();}
   var btn=document.getElementById('dl-btn');
-  if(btn)btn.style.display='flex';
+  if(btn)btn.style.display='block';
 };<\/script></head><body>
-<div id="dl-btn" style="display:none;position:fixed;bottom:20px;right:20px;z-index:999;gap:10px;flex-direction:column;align-items:flex-end">
-<button onclick="window.print()" style="background:#1e3a5f;color:#fff;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,0.3);cursor:pointer">🖨️ Print / Save PDF</button>
-<button onclick="window.close()" style="background:#ef4444;color:#fff;border:none;border-radius:12px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer">✕ Close</button>
+<div id="dl-btn" style="display:none;width:100%;padding:16px;box-sizing:border-box;position:sticky;top:0;z-index:9999;background:#1a1a2e;border-bottom:2px solid #3b82f6;text-align:center">
+<button ontouchstart="" onclick="window.print()" style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border:none;border-radius:12px;padding:16px 32px;font-size:16px;font-weight:800;cursor:pointer;width:80%;max-width:300px;-webkit-tap-highlight-color:transparent;touch-action:manipulation">🖨️ Print / Save PDF</button>
 </div>
 ${body}</body></html>`;
 }
