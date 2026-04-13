@@ -149,6 +149,13 @@ input:focus, select:focus{border-color:#3b82f6 !important;box-shadow:0 0 0 3px r
 .activity-item{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
 .activity-item:last-child{border-bottom:none;padding-bottom:0;}
 .act-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;box-shadow:0 4px 8px rgba(0,0,0,0.2);}
+
+@media print {
+  body * { visibility: hidden; }
+  #print-area, #print-area * { visibility: visible; }
+  #print-area { position: absolute; left: 0; top: 0; width: 100%; }
+  .no-print { display: none !important; }
+}
 </style>
 </head>
 <body>
@@ -255,6 +262,7 @@ input:focus, select:focus{border-color:#3b82f6 !important;box-shadow:0 0 0 3px r
 </div>
 </div>
 <div class="toast" id="toast"></div>
+<div id="print-area"></div>
 <script>
 // ═══════════════════════════════════════════════════════
 // CLOUD CONFIG — Supabase Edge Function (CORS fixed)
@@ -1324,33 +1332,25 @@ function downloadDoc(filename,html){
 function openPrintWindow(html,title){
   const isAPK = (window.median || window.gonative || (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.median));
   if(isAPK){
-    showToast('APK: Native Print chalu...', '#3b82f6');
+    showToast('APK: Print chalu...', '#3b82f6');
     try {
       const bridge = window.median || window.gonative;
       if(bridge && bridge.print) bridge.print.printHTML({html: html});
       else if(bridge && bridge.share) {
-        showToast('Print plugin nahi mila, Share try...', '#fb923c');
+        showToast('Print plugin nahi, Share try...', '#fb923c');
         bridge.share.shareFile({filename: title + '.html', base64: b64(html), mimeType: 'text/html'});
-      } else {
-        showToast('APK: Bridge not fully ready.', '#ef4444');
-      }
+      } else { showToast('APK: Bridge missing.', '#ef4444'); }
     } catch(e) { showToast('APK Error: ' + e.message, '#ef4444'); }
   } else {
-    showToast('Browser: Print dialog taiyar...', '#3b82f6');
-    const iframe = document.createElement('iframe');
-    iframe.style.visibility = 'hidden'; iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0';
-    iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = '0';
-    document.body.appendChild(iframe);
-    iframe.contentWindow.document.write(html);
-    iframe.contentWindow.document.close();
+    showToast('Browser: Print dialog taiyar ho raha hai...', '#3b82f6');
+    const area = document.getElementById('print-area');
+    area.innerHTML = html;
     setTimeout(function(){
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
-      setTimeout(function(){ document.body.removeChild(iframe); }, 1000);
+      window.print();
+      area.innerHTML = '';
     }, 500);
   }
-}
-function downloadFile(name,content,type){
+}function downloadFile(name,content,type){
   const blob = new Blob([content], {type:type});
   const url = URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download=name;
