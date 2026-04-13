@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="theme-color" content="#0a0f1e"/>
+<link rel="manifest" href='data:application/manifest+json;utf-8,{"name":"LibraryOS","short_name":"LibraryOS","display":"standalone","background_color":"#0a0f1e","theme_color":"#0a0f1e"}'>
+<title>LibraryOS</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes slideUpModal { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes popIn { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'Outfit','Inter',system-ui,sans-serif;max-width:480px;margin:0 auto;min-height:100vh;overflow-x:hidden;}
+button{cursor:pointer;font-family:inherit;transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1);}
+button:hover{filter:brightness(1.15);transform:translateY(-1px);}
+button:active{transform:translateY(1px);filter:brightness(0.9);}
+input,select,textarea{font-family:inherit;transition:border-color 0.2s, box-shadow 0.2s;}
+input:focus, select:focus{border-color:#3b82f6 !important;box-shadow:0 0 0 3px rgba(59,130,246,0.15);}
+
+.login-page{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:linear-gradient(-45deg,#0a0f1e,#1e293b,#0f172a,#020617);background-size:400% 400%;animation:gradientBG 15s ease infinite;}
+.login-logo{font-size:52px;margin-bottom:8px;animation:popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);}
+.login-title{font-size:32px;font-weight:900;background:linear-gradient(to right, #60a5fa, #a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px;animation:slideUp 0.6s ease forwards;}
+.login-sub{font-size:15px;color:#94a3b8;margin-bottom:32px;animation:slideUp 0.6s ease forwards;animation-delay:0.1s;opacity:0;}
+.login-box{background:rgba(13,21,38,0.6);backdrop-filter:blur(16px);border-radius:24px;padding:28px;width:100%;max-width:360px;border:1px solid rgba(255,255,255,0.05);box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);animation:popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;animation-delay:0.2s;opacity:0;}
+.login-field{margin-bottom:18px}
+.login-field label{font-size:13px;color:#94a3b8;display:block;margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.login-input{width:100%;background:rgba(30,41,59,0.5);border:1px solid #334155;border-radius:12px;padding:14px 16px;color:#f1f5f9;font-size:15px;outline:none}
+.login-btn{width:100%;background:linear-gradient(135deg, #3b82f6, #2563eb);color:#fff;border:none;border-radius:12px;padding:14px;font-weight:800;font-size:16px;margin-top:8px;box-shadow:0 4px 14px rgba(59,130,246,0.4);}
+.login-btn:hover{box-shadow:0 6px 20px rgba(59,130,246,0.6);}
+.login-error{color:#f87171;font-size:13px;text-align:center;margin-top:12px;display:none;animation:popIn 0.3s ease;}
+
+
+.app{display:none;padding-bottom:80px}
+.header{position:sticky;top:0;background:rgba(10,15,30,0.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding:14px 16px;display:flex;align-items:center;gap:12px;z-index:10;border-bottom:1px solid rgba(255,255,255,0.05);}
+.header-title{flex:1;font-weight:800;font-size:18px;color:#f1f5f9;letter-spacing:0.5px;}
+.icon-btn{background:transparent;border:none;color:#94a3b8;padding:6px;display:flex;align-items:center;justify-content:center;font-size:20px;border-radius:50%;}
+.icon-btn:hover{background:rgba(255,255,255,0.1);color:#fff;}
+
+.sidebar{position:fixed;top:0;left:0;width:280px;height:100vh;background:rgba(13,21,38,0.95);backdrop-filter:blur(20px);z-index:100;padding:24px 20px;display:flex;flex-direction:column;gap:6px;box-shadow:4px 0 40px rgba(0,0,0,0.6);transform:translateX(-100%);transition:transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);overflow-y:auto}
+.sidebar.open{transform:translateX(0)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(3px);z-index:99;display:none;opacity:0;transition:opacity 0.3s ease;}
+.overlay.show{display:block;opacity:1;}
+.sidebar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.lib-name{font-weight:900;font-size:18px;color:#f1f5f9;background:linear-gradient(to right, #60a5fa, #a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.lib-id{font-size:12px;color:#64748b;margin-bottom:16px;background:rgba(255,255,255,0.05);padding:4px 10px;border-radius:20px;display:inline-block;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;border:none;background:transparent;color:#94a3b8;font-size:15px;font-weight:600;width:100%;text-align:left;transition:all 0.2s;}
+.nav-item:hover{background:rgba(255,255,255,0.05);color:#f1f5f9;transform:translateX(4px);}
+.nav-item.active{background:linear-gradient(to right, rgba(59,130,246,0.15), transparent);color:#60a5fa;border-left:3px solid #3b82f6;}
+.logout-btn{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;border:1px solid rgba(248,113,113,0.2);background:rgba(248,113,113,0.05);color:#f87171;font-size:15px;font-weight:600;width:100%;margin-top:auto;transition:all 0.2s;}
+.logout-btn:hover{background:rgba(248,113,113,0.15);color:#fca5a5;}
+
+.main{padding:16px}
+.page-anim{animation:fadeIn 0.3s ease-out forwards, slideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;}
+
+.grid2{display:grid;grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));gap:12px;margin-bottom:16px;}
+.dash-card{background:rgba(13,21,38,0.7);backdrop-filter:blur(10px);border-radius:16px;padding:16px;display:flex;gap:14px;align-items:center;cursor:pointer;border:1px solid rgba(255,255,255,0.05);transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);box-shadow:0 4px 6px rgba(0,0,0,0.1);}
+.dash-card:hover{transform:translateY(-4px);box-shadow:0 10px 20px rgba(0,0,0,0.2);background:rgba(18,29,51,0.8);}
+.dash-card:active{transform:scale(0.96);}
+
+.card{background:rgba(13,21,38,0.7);backdrop-filter:blur(10px);border-radius:16px;padding:16px;display:flex;gap:12px;align-items:center;border:1px solid rgba(255,255,255,0.05);box-shadow:0 4px 6px rgba(0,0,0,0.1);}
+.card.col{flex-direction:column;align-items:stretch;gap:10px}
+
+.primary-btn{background:linear-gradient(135deg, #3b82f6, #2563eb);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-weight:700;display:flex;align-items:center;gap:8px;font-size:14px;box-shadow:0 4px 10px rgba(59,130,246,0.3);}
+.secondary-btn{background:rgba(255,255,255,0.05);color:#e2e8f0;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 18px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;}
+
+.wa-btn{background:rgba(22,163,74,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:8px 14px;font-weight:700;display:flex;align-items:center;gap:6px;font-size:13px;}
+.pay-btn{background:linear-gradient(135deg, #16a34a, #15803d);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13px;box-shadow:0 4px 10px rgba(22,163,74,0.3);}
+.detail-btn{background:rgba(255,255,255,0.08);color:#e2e8f0;border:none;border-radius:8px;padding:8px 14px;font-weight:600;font-size:13px;}
+.delete-btn{background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:7px 12px;display:flex;align-items:center;}
+.delete-btn:hover{background:rgba(239,68,68,1);color:#fff;}
+.edit-btn{background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:7px 12px;display:flex;align-items:center;}
+.renew-btn{background:rgba(99,102,241,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.3);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;}
+.tiny-btn{background:rgba(255,255,255,0.1);color:#e2e8f0;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;}
+.link-btn{background:transparent;border:none;color:#60a5fa;font-size:14px;font-weight:600;padding:4px;}
+.link-btn:hover{text-decoration:underline;background:transparent;box-shadow:none;transform:none;}
+
+.tab-btn{flex:1;background:rgba(30,41,59,0.5);border:1px solid rgba(255,255,255,0.05);color:#94a3b8;border-radius:12px;padding:10px 4px;font-weight:600;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all 0.3s;}
+.tab-btn:hover{background:rgba(30,41,59,0.8);}
+
+.member-card{background:rgba(13,21,38,0.6);backdrop-filter:blur(8px);border-radius:16px;padding:14px 16px;margin-bottom:10px;display:flex;gap:14px;align-items:center;border:1px solid rgba(255,255,255,0.05);transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);}
+.member-card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,0.1);box-shadow:0 8px 16px rgba(0,0,0,0.2);}
+.member-avatar{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg, #1e3a8a, #3b82f6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex-shrink:0;box-shadow:0 4px 10px rgba(59,130,246,0.3);}
+.badge{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:800;letter-spacing:0.5px;}
+
+.seat-grid{display:grid;gap:8px}
+.seat-btn{border:2px solid;border-radius:10px;padding:12px 0;font-weight:800;font-size:14px;transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1);}
+.seat-btn:hover{transform:scale(1.05);}
+
+.shift-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-radius:12px;border:1px solid rgba(255,255,255,0.05);margin-bottom:8px;background:rgba(10,15,30,0.5);}
+
+.section-label{font-size:12px;color:#94a3b8;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-top:20px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.section-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.05);}
+
+.detail-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:200;display:none;align-items:flex-end;justify-content:center;opacity:0;}
+.modal-overlay.show{display:flex;animation:fadeIn 0.3s ease-out forwards;}
+.modal-box{background:#0d1526;border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,0.5);border-top:1px solid rgba(255,255,255,0.1);transform:translateY(100%);}
+.modal-overlay.show .modal-box{animation:slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.05);flex-shrink:0;background:rgba(13,21,38,0.8);}
+.modal-body{padding:20px 24px;overflow-y:auto;flex:1;}
+
+.field{margin-bottom:16px}
+.field label{font-size:12px;color:#94a3b8;display:block;margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.input{width:100%;background:rgba(30,41,59,0.4);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 16px;color:#f1f5f9;font-size:15px;outline:none;}
+.input:focus{background:rgba(30,41,59,0.7);border-color:#3b82f6;}
+
+.search-input{flex:1;background:rgba(30,41,59,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 16px;color:#f1f5f9;font-size:14px;outline:none;transition:all 0.2s;}
+.search-input:focus{border-color:#3b82f6;background:rgba(30,41,59,0.8);}
+
+.small-input{background:rgba(30,41,59,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 12px;color:#f1f5f9;font-size:14px;outline:none;width:100px;}
+
+.empty{text-align:center;color:#64748b;padding:40px 20px;font-size:15px;font-weight:500;animation:fadeIn 0.4s ease;}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);padding:14px 28px;border-radius:14px;font-weight:700;font-size:14px;color:#fff;z-index:300;box-shadow:0 10px 40px rgba(0,0,0,0.5);white-space:nowrap;display:none;max-width:90vw;text-align:center;opacity:0;transition:all 0.3s cubic-bezier(0.16, 1, 0.3, 1);}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;display:block;}
+
+.alert-card{background:rgba(13,21,38,0.7);border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.05);box-shadow:0 4px 10px rgba(0,0,0,0.1);transition:all 0.3s;}
+.alert-card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,0.1);}
+
+.export-btn-item{flex:1;min-width:90px;background:rgba(30,41,59,0.3);color:#e2e8f0;border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:14px 10px;font-size:13px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all 0.2s;}
+.export-btn-item:hover{background:rgba(30,41,59,0.6);border-color:#3b82f6;}
+.export-btn-item span{font-size:12px;color:#94a3b8;}
+
+.settings-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+
+.ana-card{background:rgba(13,21,38,0.7);backdrop-filter:blur(10px);border-radius:16px;padding:18px;margin-bottom:14px;border:1px solid rgba(255,255,255,0.05);}
+.ana-card-title{font-size:14px;font-weight:800;color:#f1f5f9;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.info-row:last-child{border-bottom:none;padding-bottom:0;}
+.info-label{font-size:14px;color:#94a3b8;font-weight:500;}
+.info-val{font-size:14px;font-weight:700;color:#f1f5f9;}
+
+.activity-item{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.activity-item:last-child{border-bottom:none;padding-bottom:0;}
+.act-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;box-shadow:0 4px 8px rgba(0,0,0,0.2);}
+</style>
+</head>
+<body>
+<div class="login-page" id="login-page">
+<div class="login-logo">📖</div>
+<div class="login-title">LibraryOS</div>
+<div class="login-sub">Library Management System</div>
+<div class="login-box">
+<div class="login-field"><label>User ID</label><input class="login-input" id="login-id" placeholder="Enter your ID" autocomplete="off"/></div>
+<div class="login-field"><label>Password</label><input class="login-input" id="login-pass" type="password" placeholder="Enter password"/></div>
+<button class="login-btn" onclick="doLogin()">Login →</button>
+<div class="login-error" id="login-error">❌ Wrong ID or Password!</div>
+<div class="device-error" id="device-error">🔒 Already logged in on another device. Contact admin.</div>
+</div>
+</div>
+<div class="app" id="app">
+<div class="sidebar" id="sidebar">
+<div class="sidebar-header">
+<div><div class="lib-name" id="sidebar-libname">📖 LibraryOS</div></div>
+<button class="icon-btn" onclick="closeSidebar()">✕</button>
+</div>
+<div class="lib-id" id="sidebar-libid"></div>
+<button class="nav-item active" id="nav-dashboard" onclick="gotoPage('dashboard')">📊 Dashboard</button>
+<button class="nav-item" id="nav-members" onclick="gotoPage('members')">👤 Members</button>
+<button class="nav-item" id="nav-seats" onclick="gotoPage('seats')">🪑 Seat Map</button>
+<button class="nav-item" id="nav-payments" onclick="gotoPage('payments')">💳 Payments</button>
+<button class="nav-item" id="nav-expenses" onclick="gotoPage('expenses')">🧾 Expenses</button>
+<button class="nav-item" id="nav-analytics" onclick="gotoPage('analytics')">📉 Analytics</button>
+<button class="nav-item" id="nav-export" onclick="gotoPage('export')">⬇️ Export</button>
+<button class="nav-item" id="nav-settings" onclick="gotoPage('settings')">⚙️ Settings</button>
+<button class="logout-btn" onclick="doLogout()">🚪 Logout</button>
+</div>
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+<div class="header">
+<button class="icon-btn" onclick="openSidebar()">☰</button>
+<span class="header-title" id="page-title">Dashboard</span>
+<span id="sync-badge" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:rgba(34,197,94,0.15);color:#4ade80;flex-shrink:0;transition:all 0.3s">🟢 Synced</span>
+<button class="icon-btn" id="alert-header-btn" onclick="gotoPage('alerts')" style="display:none">⚠️<span id="alert-count-header" style="font-size:12px;background:#ef4444;color:#fff;border-radius:20px;padding:1px 6px;margin-left:3px">0</span></button>
+</div>
+<div class="main" id="main-content"></div>
+</div>
+<div class="modal-overlay" id="modal-addMember">
+<div class="modal-box">
+<div class="modal-header"><span style="font-weight:700;color:#f1f5f9" id="addmember-title">Add Member</span><button class="icon-btn" onclick="closeModal('modal-addMember')">✕</button></div>
+<div class="modal-body">
+<div class="field"><label>Full Name</label><input class="input" id="am-name" placeholder="Member name"/></div>
+<div class="field"><label>Mobile No.</label><input class="input" id="am-mobile" placeholder="10-digit number" type="tel"/></div>
+<div class="field"><label>Seat No.</label><input class="input" id="am-seat" type="number" min="1" placeholder="e.g. 15"/></div>
+<div class="field"><label>Shift</label><select class="input" id="am-shift"></select></div>
+<div id="am-seat-info" style="display:none;margin-bottom:8px"></div>
+<div id="am-conflict" style="color:#fb923c;font-size:12px;margin-bottom:8px;display:none">⚠️ Ye seat-shift already occupied hai!</div>
+<div class="field"><label>Charge (₹)</label><input class="input" id="am-charge" type="number" placeholder="e.g. 1500"/></div>
+<div class="field"><label>Start Date</label><input class="input" id="am-start" type="date"/></div>
+<div class="field"><label>End Date</label><input class="input" id="am-end" type="date"/></div>
+<button class="primary-btn" style="width:100%;justify-content:center;margin-top:4px" onclick="submitAddMember()">Save Member</button>
+</div>
+</div>
+</div>
+<div class="modal-overlay" id="modal-payment">
+<div class="modal-box">
+<div class="modal-header"><span style="font-weight:700;color:#f1f5f9">Record Payment</span><button class="icon-btn" onclick="closeModal('modal-payment')">✕</button></div>
+<div class="modal-body" id="modal-payment-body"></div>
+</div>
+</div>
+<div class="modal-overlay" id="modal-expense">
+<div class="modal-box">
+<div class="modal-header"><span style="font-weight:700;color:#f1f5f9">Add Expense</span><button class="icon-btn" onclick="closeModal('modal-expense')">✕</button></div>
+<div class="modal-body">
+<div class="field"><label>Expense Name</label><input class="input" id="ex-name" placeholder="e.g. Electricity Bill"/></div>
+<div class="field"><label>Amount (₹)</label><input class="input" id="ex-amount" type="number" placeholder="0"/></div>
+<div class="field"><label>Date</label><input class="input" id="ex-date" type="date"/></div>
+<button class="primary-btn" style="width:100%;justify-content:center" onclick="submitExpense()">Add Expense</button>
+</div>
+</div>
+</div>
+<div class="modal-overlay" id="modal-detail">
+<div class="modal-box">
+<div class="modal-header"><span style="font-weight:700;color:#f1f5f9">Member Details</span><button class="icon-btn" onclick="closeModal('modal-detail')">✕</button></div>
+<div class="modal-body" id="modal-detail-body"></div>
+</div>
+</div>
+<div class="modal-overlay" id="modal-list">
+<div class="modal-box">
+<div class="modal-header"><span style="font-weight:700;color:#f1f5f9" id="modal-list-title">Details</span><button class="icon-btn" onclick="closeModal('modal-list')">✕</button></div>
+<div class="modal-body" id="modal-list-body"></div>
+</div>
+</div>
+<div class="modal-overlay" id="modal-renew">
+<div class="modal-box">
+<div class="modal-header"><span style="font-weight:700;color:#f1f5f9">🔄 Renew Membership</span><button class="icon-btn" onclick="closeModal('modal-renew')">✕</button></div>
+<div class="modal-body" id="modal-renew-body"></div>
+</div>
+</div>
+<div class="modal-overlay" id="modal-confirm">
+<div class="modal-box">
+<div class="modal-header"><span style="font-weight:700;color:#f1f5f9" id="confirm-title">Confirm</span><button class="icon-btn" onclick="closeModal('modal-confirm')">✕</button></div>
+<div class="modal-body">
+<div style="color:#94a3b8;margin-bottom:16px;font-size:14px" id="confirm-msg">Kya aap sure hain?</div>
+<div style="display:flex;gap:10px">
+<button class="secondary-btn" onclick="closeModal('modal-confirm')">Cancel</button>
+<button class="primary-btn" style="background:#dc2626" id="confirm-ok-btn">Confirm</button>
+</div>
+</div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+// ═══════════════════════════════════════════════════════
+// CLOUD CONFIG — Supabase Edge Function (CORS fixed)
+// ═══════════════════════════════════════════════════════
+const EDGE_URL = 'https://dqwbnvydeybwkugiawte.supabase.co/functions/v1/library-sync';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRxd2JudnlkZXlid2t1Z2lhd3RlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5OTgzNzcsImV4cCI6MjA5MTU3NDM3N30.Ral0kpl0uk3fZgDE-kO3RbXFdSKAZGnLL6cFIP2mRk4';
+
+// ═══════════════════════════════════════════════════════
+// SYNC ENGINE — verified push, retry, device-free login
+// ═══════════════════════════════════════════════════════
+let _syncTimer = null;
+let _retryTimer = null;
+let _isSyncing = false;
+let _syncPending = false;
+let _retryCount = 0;
+let _isOnline = navigator.onLine;
+
+function updateSyncBadge(){
+  try {
+    const badge = document.getElementById('sync-badge');
+    if(!badge) return;
+    if(!_isOnline){ badge.textContent='🔴 Offline'; badge.style.background='rgba(239,68,68,0.15)'; badge.style.color='#f87171'; }
+    else if(_syncPending){ badge.textContent='⏳ Pending'; badge.style.background='rgba(239,68,68,0.15)'; badge.style.color='#f87171'; }
+    else if(_isSyncing){ badge.textContent='🔄 Syncing...'; badge.style.background='rgba(251,191,36,0.15)'; badge.style.color='#fbbf24'; }
+    else { badge.textContent='🟢 Synced'; badge.style.background='rgba(34,197,94,0.15)'; badge.style.color='#4ade80'; _retryCount=0; }
+  } catch(e){}
+}
+
+function cloudFetch(method, body, callback){
+  try {
+    const xhr = new XMLHttpRequest();
+    // apikey URL param mein — WebView mein headers block nahi hote aise
+    const base = EDGE_URL + '?apikey=' + encodeURIComponent(ANON_KEY);
+    const url = method === 'GET'
+      ? base + '&user_id=' + encodeURIComponent(currentUser)
+      : base;
+    xhr.open(method, url, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.timeout = 15000;
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState !== 4) return;
+      try {
+        const data = xhr.responseText ? JSON.parse(xhr.responseText) : null;
+        callback(xhr.status >= 200 && xhr.status < 300, data);
+      } catch(e){ callback(false, null); }
+    };
+    xhr.onerror = function(){ callback(false, null); };
+    xhr.ontimeout = function(){ callback(false, null); };
+    xhr.send(body ? JSON.stringify(body) : null);
+  } catch(e){ callback(false, null); }
+}
+
+function pushToCloud(){
+  if(!currentUser || !_isOnline) return;
+  _isSyncing = true; updateSyncBadge();
+  try {
+    const s = getState();
+    const localTs = parseInt(localStorage.getItem(sk('_updated_at')) || '0');
+    const payload = {
+      user_id: currentUser,
+      members: JSON.parse(JSON.stringify(s.members || [])),
+      expenses: JSON.parse(JSON.stringify(s.expenses || [])),
+      settings: JSON.parse(JSON.stringify(s.settings || {})),
+      next_id: s.nextId || 1,
+      activities: JSON.parse(JSON.stringify((s.activities || []).slice(0,50))),
+      updated_at: new Date(localTs).toISOString()
+    };
+    cloudFetch('POST', payload, function(ok, data){
+      _isSyncing = false;
+      if(ok && data && data.ok){
+        _syncPending = false;
+        _retryCount = 0;
+        updateSyncBadge();
+      } else {
+        // Push fail — retry with backoff
+        _syncPending = true;
+        updateSyncBadge();
+        _retryCount++;
+        if(_retryCount <= 3){
+          const delay = Math.pow(2, _retryCount) * 1000; // 2s, 4s, 8s
+          if(_retryTimer) clearTimeout(_retryTimer);
+          _retryTimer = setTimeout(function(){ pushToCloud(); }, delay);
+        }
+      }
+    });
+  } catch(e){
+    _isSyncing = false; _syncPending = true; updateSyncBadge();
+  }
+}
+
+function pullFromCloud(callback){
+  if(!currentUser || !_isOnline){ if(callback) callback(false); return; }
+  _isSyncing = true; updateSyncBadge();
+  cloudFetch('GET', null, function(ok, data){
+    _isSyncing = false; updateSyncBadge();
+    if(!ok || !data || data.ok === false){ if(callback) callback(false); return; }
+    try {
+      const cloudTs = new Date(data.updated_at || 0).getTime();
+      const localTs = parseInt(localStorage.getItem(sk('_updated_at')) || '0');
+      const localMembers = ld('members', []);
+      if(cloudTs > localTs || localMembers.length === 0){
+        if(data.members) sd('members', data.members);
+        if(data.expenses) sd('expenses', data.expenses);
+        if(data.settings) sd('settings', data.settings);
+        if(data.next_id) sd('nextId', data.next_id);
+        if(data.activities) sd('activities', data.activities);
+        localStorage.setItem(sk('_updated_at'), cloudTs.toString());
+        if(callback) callback(true);
+      } else {
+        if(callback) callback(false);
+      }
+    } catch(e){ if(callback) callback(false); }
+  });
+}
+
+function schedulePush(){
+  try {
+    localStorage.setItem(sk('_updated_at'), Date.now().toString());
+    _syncPending = true; updateSyncBadge();
+    if(_syncTimer) clearTimeout(_syncTimer);
+    _syncTimer = setTimeout(function(){ pushToCloud(); }, 2000);
+  } catch(e){}
+}
+
+window.addEventListener('online', function(){
+  _isOnline = true; updateSyncBadge();
+  showToast('Internet aa gaya! Sync ho raha hai... 🔄','#3b82f6');
+  if(_syncPending) pushToCloud();
+  else pullFromCloud(function(){});
+});
+window.addEventListener('offline', function(){
+  _isOnline = false; updateSyncBadge();
+  showToast('Offline mode — data local save ho raha hai 📱','#f59e0b');
+});
+
+// ═══════════════════════════════════════════════════════
+// 100 LOGIN CREDENTIALS
+// ═══════════════════════════════════════════════════════
+const USERS = {
+  "vvf2zg32ek": "Qh*UFt449rQjv*",
+  "zirhifrxze": "P@40k2Q&aiZX",
+  "xzy1p8dhl": "Xn35Vb%5H9#ZIm",
+  "ww9o8qqry": "@Fq96befBPI6T#",
+  "ztckzabu5p": "!C@Hc935LeZr",
+  "r2gzydzqj": "4Dtsvh^!Bl793R",
+  "ihoso9aap": "I6LXr5rq!S3^",
+  "wwe3i5ygjw": "$99f&h34EDgLQ",
+  "ih9fxeya": "8d!0I0XvLj$D",
+  "g9yq53sv": "&09lpLaO4Dl^wq",
+  "fqrmw4tjd": "L89je7O^v@Nw",
+  "h2lzsv7bj": "5dH&Ir^rX0y6y",
+  "vbg7v2tk": "1gM3*IUhP@84m",
+  "oowvj73p": "a0uY6*mZ$L6rU",
+  "bxdb365d": "cVL8%U7Ijc7*",
+  "kymbkt91lu": "x1@FbUq7*37S",
+  "oupqu1ifub": "c*F$P3tLt0D2q7",
+  "jdhnauzjy": "5wnS*y2C!p7SY",
+  "cphpny41q": "7Z3Mha@*6F4o8P",
+  "noh9leqw5": "4v#0*mlUG3S1V",
+  "ikrygasojt": "Wo7Te$Dk^1e4M",
+  "jn64hbvd": "RVC!57*91iWjzO",
+  "revfwvhse": "M2bV&cA3@iV2",
+  "rcqiinczon": "jQTblLv8@97@",
+  "dgud40cjm": "0NSny#f5%9Nl",
+  "dbydrys7": "E0z5W&!2jAi1wS",
+  "eyfz29a8": "NI5mC6@o*aZxf8",
+  "kwbexh29m": "G79Nc$4*Dsid",
+  "vopkjilet": "w!7@P79C8lgV7U",
+  "soebvipono": "^eYMgWbZ99^5",
+  "tcd7wa7z1": "AXs09xA@8q!8",
+  "fp9upoxj6": "3c4D%6Zah%Qa",
+  "jsxpzg9h": "0N@Ncxk0!5Akl",
+  "qsi7kjcf": "y*X*0rET8Vo7",
+  "gkxvtagblj": "jee#V&4D7Q3g",
+  "v8nxp74qc": "kTK^h5K4U7d$",
+  "anjpwonx": "N89pOy#^c3JV",
+  "nlzbhlar": "13%Te4@XkJKTq0",
+  "jz3endftuw": "*e&6Xg3GEcm5",
+  "v387yl6oy": "10g3!yNUSAI@gm",
+  "r7gyjvlz": "uu@65U&O4GOs",
+  "xumoxskn": "uP6sy7@3KQvI^7",
+  "u8ahmrprj": "nYx36$A69iy@bA",
+  "okyrzt3goe": "LgGsj04c75&Z!",
+  "yurgdhlxw": "V4Ofk@m%1MP4",
+  "okqxoulox": "49ngE!Tyl3HR%I",
+  "xgbsrjf7pt": "s4iDr#18*s6BT7",
+  "crbjbgszpp": "IyFCdbKh2*$M17",
+  "tay0u1e4c": "5Y5$ME*9vlsDp",
+  "bb3bjtr5b0": "q2X7dMW#Fg!Kc5",
+  "wsnys6rfa2": "6%bL58tFP^Le",
+  "p9snk6pzip": "3N1dV!9z^S1q",
+  "utjcqk9ab": "43YY@y9fAi0^",
+  "rrumid8c": "iVOJ!4ih26xK&",
+  "xiexmuhz": "m3f^V84Pja3WD*",
+  "umrqixurp": "r#dU4!AA8Kf7KX",
+  "otw24qmb": "rXm1QR3eN&T8O@",
+  "ssfejeot2": "xD%5xHz0IDn8*",
+  "saguwp1pyr": "2t1fe%G*4JyD",
+  "ly29adqg": "kP699WQ!*wsGm",
+  "i9bnjzvar3": "9xa6UD^Ig4B0%",
+  "kvtwm54sc": "4AkqrQ0rX&1@7A",
+  "nuz6gxwldb": "8lJN^nn43Lv&z",
+  "en4yhku3": "#3yk42H$IyEQ7",
+  "kgk1dhms": "Xt0x^8Rr6EJ*",
+  "t0mljxzd": "K99G%K!4qsHsf",
+  "efvrgoqw": "xmV1E@24Rle&",
+  "ckxcuh801": "Woh6B9AUd9@@",
+  "wvfojqi8": "$P24FvMk$4cW2s",
+  "bxfu2ne46o": "$cHRf#346Exn",
+  "yqylvyoigr": "y5p^2qJlJT%44",
+  "d2reckiqs2": "gSu9vml^B7G9$a",
+  "fscr7mwcen": "$m0lFLYz00^n",
+  "qh9oezait": "b1h*RmbDxIl54^",
+  "ykx6oc47cp": "Nt8eFsy24@@sH",
+  "gxh3lu3rs": "0056xuEuj$M&U",
+  "svvpfv9ih": "HePP9q4s9H^$E",
+  "xyoly9hy7t": "BlsG9P*Zz0^y3",
+  "dx7rysgtf": "q@AX^3f78RLw",
+  "hvp7aro2lc": "qfZi&m98#OykY8",
+  "gxnpvh5cac": "SJqD%94k$3oB",
+  "ohx0brxx": "@U4*PaxB6e8Ho8",
+  "fw1o91aot": "Ef#Uc$x051CD1n",
+  "ehl5u8hg92": "oiI7m9MWs&o0^",
+  "nkm5mk6l0": "1saxRQd$N0z9!",
+  "ezev1wtnb": "^2O03@yhGQBNo",
+  "pjsz1e29": "8EOoV*wz*267R",
+  "p2bqggizh7": "48%73cKBD!nss",
+  "two9snjb": "d@R03aK0C2^x",
+  "diewdecf": "qmd9A0$r9I*NxW",
+  "voko0sd83": "K$6&wb1U4JVz",
+  "vo156ybcmv": "11#@vAeUCC7t",
+  "kyrk4ene": "Cm8u0O$PvqK4%J",
+  "h65rht1tfx": "&JPz2H3m$Pba6",
+  "drcwiyxw3j": "JGJv%eq8!994g",
+  "tpe7ysug": "4e3#mwkKtvP@M2",
+  "d2fdcev9": "1z*$2TylXGhiD4",
+  "ks2m8bx7": "fH@^Bi3cO17G8",
+  "mulggpmdg6": "@8r4#GcDqsN0F",
+  "kouigme1f": "O89Sd0W$KqTi@"
+};
+let currentUser=null,currentPage='dashboard',currentAlertTab='pending',currentMemberTab='all',currentAnaTab='finance',selectedSeat=null,editingMemberId=null,payingMemberId=null;
+function getDeviceId(){let d=localStorage.getItem('_did');if(!d){d='dev_'+Math.random().toString(36).substr(2,12);localStorage.setItem('_did',d);}return d;}
+function doLogin(){
+const id=document.getElementById('login-id').value.trim();
+const pass=document.getElementById('login-pass').value.trim();
+document.getElementById('login-error').style.display='none';
+document.getElementById('device-error').style.display='none';
+if(!USERS[id]||USERS[id]!==pass){document.getElementById('login-error').style.display='block';return;}
+localStorage.setItem('_sess',id);
+currentUser=id;
+initApp();
+}
+function doLogout(){
+localStorage.removeItem('_sess');
+currentUser=null;
+document.getElementById('login-page').style.display='flex';
+document.getElementById('app').style.display='none';
+document.getElementById('login-id').value='';
+document.getElementById('login-pass').value='';
+}
+function sk(k){return currentUser+'_'+k;}
+function ld(k,def){try{const v=localStorage.getItem(sk(k));return v?JSON.parse(v):def;}catch{return def;}}
+function sd(k,v){localStorage.setItem(sk(k),JSON.stringify(v));}
+function getState(){
+return{
+members:ld('members',[]),
+expenses:ld('expenses',[]),
+nextId:ld('nextId',1),
+activities:ld('activities',[]),
+settings:ld('settings',{
+libName:'My Library',totalSeats:60,fullShiftEnabled:true,
+shifts:[
+{id:'s1',label:'Shift 1',time:'6:00 AM – 10:00 AM'},
+{id:'s2',label:'Shift 2',time:'10:00 AM – 2:00 PM'},
+{id:'s3',label:'Shift 3',time:'2:00 PM – 6:00 PM'},
+{id:'s4',label:'Shift 4',time:'6:00 PM – 10:00 PM'}
+]
+})
+};
+}
+function saveMembers(m){sd('members',m);schedulePush();}
+function saveExpenses(e){sd('expenses',e);schedulePush();}
+function saveNextId(n){sd('nextId',n);}
+function saveSettings(s){sd('settings',s);schedulePush();}
+function saveActivities(a){sd('activities',a);schedulePush();}
+function logActivity(type,msg){
+const acts=ld('activities',[]);
+acts.unshift({type,msg,time:new Date().toISOString()});
+if(acts.length>50)acts.pop();
+saveActivities(acts);
+}
+function today(){return new Date().toISOString().split('T')[0];}
+function nextMonthSameDate(dateStr){
+const p=dateStr.split('-');
+let y=Number(p[0]),m=Number(p[1]),d=Number(p[2]);
+m+=1;if(m>12){m=1;y+=1;}
+return y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+}
+function fmtDate(d){
+if(!d)return'—';
+try{return new Date(d.substr(0,10)+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+catch{return d;}
+}
+function fmtDT(d){
+if(!d)return'—';
+try{const dt=new Date(d);return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})+' at '+dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});}
+catch{return d;}
+}
+function fmtTime(d){
+if(!d)return'—';
+try{return new Date(d).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});}
+catch{return d;}
+}
+function fmtCur(n){return'₹'+Number(n||0).toLocaleString('en-IN');}
+function daysBetween(s,e){return Math.ceil((new Date(e.substr(0,10)+'T00:00:00')-new Date(s.substr(0,10)+'T00:00:00'))/864e5);}
+function activeMembers(){return getState().members.filter(m=>!m.deleted);}
+function getShifts(){return getState().settings.shifts||[];}
+function getShift(id){
+if(id==='sf')return{label:'Full Shift',time:''};
+return getShifts().find(s=>s.id===id)||{label:id,time:''};
+}
+function parseShiftMinutes(timeStr){
+if(!timeStr)return null;
+try{
+const parts=timeStr.split('–').map(s=>s.trim());
+if(parts.length!==2)return null;
+const toMin=function(t){
+const m=t.match(/(\d+):(\d+)\s*(AM|PM)/i);
+if(!m)return null;
+let h=Number(m[1]),min=Number(m[2]);
+const pm=m[3].toUpperCase()==='PM';
+if(pm&&h!==12)h+=12;
+if(!pm&&h===12)h=0;
+return h*60+min;
+};
+const s=toMin(parts[0]),e=toMin(parts[1]);
+if(s===null||e===null)return null;
+return{start:s,end:e<=s?e+1440:e};
+}catch{return null;}
+}
+function shiftsOverlap(timeA,timeB){
+if(!timeA||!timeB)return false;
+const a=parseShiftMinutes(timeA);
+const b=parseShiftMinutes(timeB);
+if(!a||!b)return false;
+return a.start<b.end&&b.start<a.end;
+}
+function isShiftConflict(seatNo,shiftId,excludeMemberId){
+const members=activeMembers().filter(m=>String(m.seatNo)===String(seatNo)&&m.id!==excludeMemberId);
+if(!members.length)return false;
+const allShifts=getShifts();
+const newShift=allShifts.find(s=>s.id===shiftId);
+const newTime=newShift?newShift.time:null;
+for(const m of members){
+if(m.shiftId==='sf')return true;
+if(shiftId==='sf')return true;
+if(m.shiftId===shiftId)return true;
+const existingShift=allShifts.find(s=>s.id===m.shiftId);
+const existingTime=existingShift?existingShift.time:null;
+if(newTime&&existingTime&&shiftsOverlap(newTime,existingTime))return true;
+}
+return false;
+}
+function seatShiftMap(){
+const map={};
+const allShifts=getShifts();
+activeMembers().forEach(m=>{
+const k=String(m.seatNo);
+if(!map[k])map[k]=new Set();
+if(m.shiftId==='sf'){
+allShifts.forEach(s=>map[k].add(s.id));
+map[k].add('sf');
+}else{
+map[k].add(m.shiftId);
+const occupiedNonSf=[...map[k]].filter(id=>id!=='sf');
+if(occupiedNonSf.length>=allShifts.length)map[k].add('sf');
+}
+});
+return map;
+}
+function pendingList(){return activeMembers().filter(m=>(m.paidAmount||0)<m.charge);}
+function expiringList(){return activeMembers().filter(m=>{const d=daysBetween(today(),m.endDate);return d>=0&&d<=4;});}
+function expiredList(){return activeMembers().filter(m=>daysBetween(today(),m.endDate)<0);}
+function totalAlerts(){
+const ids=new Set();
+pendingList().forEach(m=>ids.add(m.id));
+expiringList().forEach(m=>ids.add(m.id));
+expiredList().forEach(m=>ids.add(m.id));
+return ids.size;
+}
+function showToast(msg,color){
+const t=document.getElementById('toast');
+t.textContent=msg;t.style.background=color||'#22c55e';
+t.style.display='block';
+setTimeout(()=>t.classList.add('show'),10);
+setTimeout(()=>{
+  t.classList.remove('show');
+  setTimeout(()=>t.style.display='none',300);
+}, 2800);
+}
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
+function openModal(id){const el=document.getElementById(id);if(el)el.classList.add('show');}
+function closeModal(id){const el=document.getElementById(id);if(el)el.classList.remove('show');}
+function openWA(mobile,msg){const n=mobile.replace(/\D/g,'');const full=n.startsWith('91')?n:'91'+n;window.open('https://wa.me/'+full+'?text='+encodeURIComponent(msg),'_blank');}
+function initApp(){
+document.getElementById('login-page').style.display='none';
+document.getElementById('app').style.display='block';
+const s=getState();
+document.getElementById('sidebar-libname').textContent='📖 '+s.settings.libName;
+document.getElementById('sidebar-libid').textContent='ID: '+currentUser;
+gotoPage('dashboard');
+pullFromCloud(function(pulled){
+  if(pulled){
+    const s2=getState();
+    document.getElementById('sidebar-libname').textContent='📖 '+s2.settings.libName;
+    showToast('Cloud se data sync ho gaya! ☁️','#3b82f6');
+    renderPage();
+  }
+});
+}
+function checkSession(){
+const s=localStorage.getItem('_sess');
+if(s&&USERS[s]){currentUser=s;initApp();}
+else{document.getElementById('login-page').style.display='flex';}
+}
+function updateAlertBadge(){
+const c=totalAlerts();
+const hb=document.getElementById('alert-header-btn');
+const hbc=document.getElementById('alert-count-header');
+if(hb)hb.style.display=c>0?'flex':'none';
+if(hbc)hbc.textContent=c;
+}
+function gotoPage(p){
+currentPage=p;closeSidebar();
+document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+const nb=document.getElementById('nav-'+p);if(nb)nb.classList.add('active');
+const titles={dashboard:'Dashboard',alerts:'Alerts',members:'Members',seats:'Seat Map',payments:'Payments',expenses:'Expenses',analytics:'Analytics',export:'Export',settings:'Settings'};
+document.getElementById('page-title').textContent=titles[p]||p;
+
+const mc = document.getElementById('main-content');
+if(mc){
+  mc.classList.remove('page-anim');
+  void mc.offsetWidth; // trigger reflow
+  mc.classList.add('page-anim');
+}
+
+renderPage();
+}
+function renderPage(){
+updateAlertBadge();
+const mc=document.getElementById('main-content');
+const pages={dashboard:renderDashboard,alerts:renderAlerts,members:renderMembers,seats:renderSeats,payments:renderPayments,expenses:renderExpenses,analytics:renderAnalytics,export:renderExport,settings:renderSettings};
+mc.innerHTML=(pages[currentPage]||renderDashboard)();
+}
+function showDashModal(type){
+const am=activeMembers();const s=getState();
+let title='',html='';
+if(type==='members'){
+title='👤 All Members ('+am.length+')';
+html=am.length?am.map(m=>{const sh=getShift(m.shiftId);const p=m.charge-(m.paidAmount||0);return'<div class="member-card" onclick="closeModal(\'modal-list\');openDetail('+m.id+')" style="cursor:pointer"><div class="member-avatar">'+m.name[0]+'</div><div style="flex:1"><div style="font-weight:700;color:#f1f5f9">'+m.name+'</div><div style="font-size:12px;color:#94a3b8">Seat '+m.seatNo+' · '+sh.label+'</div></div><span class="badge" style="background:'+(p>0?'#451a03':'#052e16')+';color:'+(p>0?'#fb923c':'#4ade80')+'">'+(p>0?'₹'+p+' due':'Paid ✓')+'</span></div>';}).join(''):'<div class="empty">No members</div>';
+}else if(type==='income'){
+const total=am.reduce((x,m)=>x+(m.charge||0),0);
+title='💰 Income Details';
+html='<div style="margin-bottom:14px"><div style="font-size:28px;font-weight:900;color:#0ea5e9">'+fmtCur(total)+'</div><div style="font-size:12px;color:#64748b">Total expected income</div></div>';
+html+=getShifts().map(sh=>{const inc=am.filter(m=>m.shiftId===sh.id).reduce((x,m)=>x+(m.charge||0),0);return'<div class="info-row"><span class="info-label">'+sh.label+'</span><span class="info-val" style="color:#0ea5e9">'+fmtCur(inc)+'</span></div>';}).join('');
+const sfInc=am.filter(m=>m.shiftId==='sf').reduce((x,m)=>x+(m.charge||0),0);
+if(sfInc>0)html+='<div class="info-row"><span class="info-label">Full Shift</span><span class="info-val" style="color:#0ea5e9">'+fmtCur(sfInc)+'</span></div>';
+}else if(type==='collected'){
+const paid=am.filter(m=>(m.paidAmount||0)>0);
+title='✅ Collected';
+html='<div style="margin-bottom:14px"><div style="font-size:28px;font-weight:900;color:#22c55e">'+fmtCur(paid.reduce((x,m)=>x+(m.paidAmount||0),0))+'</div><div style="font-size:12px;color:#64748b">Total collected</div></div>';
+html+=paid.map(m=>'<div class="info-row"><div><div style="color:#e2e8f0;font-weight:600">'+m.name+'</div><div style="font-size:11px;color:#64748b">Seat '+m.seatNo+'</div></div><span style="color:#4ade80;font-weight:700">'+fmtCur(m.paidAmount)+'</span></div>').join('');
+}else if(type==='pending'){
+const pen=pendingList();
+title='⏳ Pending';
+html='<div style="margin-bottom:14px"><div style="font-size:28px;font-weight:900;color:#f59e0b">'+fmtCur(pen.reduce((x,m)=>x+(m.charge-(m.paidAmount||0)),0))+'</div><div style="font-size:12px;color:#64748b">Total pending</div></div>';
+html+=pen.map(m=>{const p=m.charge-(m.paidAmount||0);return'<div class="member-card"><div class="member-avatar">'+m.name[0]+'</div><div style="flex:1"><div style="font-weight:700;color:#f1f5f9">'+m.name+'</div><div style="font-size:12px;color:#94a3b8">Seat '+m.seatNo+' · Due: '+fmtCur(p)+'</div></div><button class="pay-btn" onclick="closeModal(\'modal-list\');openPayment('+m.id+')">Pay</button></div>';}).join('');
+}else if(type==='expenses'){
+const total=s.expenses.reduce((x,e)=>x+e.amount,0);
+title='🧾 Expenses';
+html='<div style="margin-bottom:14px"><div style="font-size:28px;font-weight:900;color:#ef4444">'+fmtCur(total)+'</div><div style="font-size:12px;color:#64748b">Total expenses</div></div>';
+html+=[...s.expenses].reverse().map(e=>'<div class="info-row"><div><div style="color:#e2e8f0;font-weight:600">'+e.name+'</div><div style="font-size:11px;color:#64748b">'+fmtDate(e.date)+'</div></div><span style="color:#f87171;font-weight:700">-'+fmtCur(e.amount)+'</span></div>').join('');
+}
+document.getElementById('modal-list-title').textContent=title;
+document.getElementById('modal-list-body').innerHTML=html||'<div class="empty">No data</div>';
+openModal('modal-list');
+}
+function renderDashboard(){
+const am=activeMembers();const s=getState();const ssm=seatShiftMap();
+const totalIncome=am.reduce((x,m)=>x+(m.charge||0),0);
+const totalPaid=am.reduce((x,m)=>x+(m.paidAmount||0),0);
+const totalExp=s.expenses.reduce((x,e)=>x+(e.amount||0),0);
+const net=totalPaid-totalExp;
+const totalSlots=s.settings.totalSeats*getShifts().length;
+const occSlots=Object.values(ssm).reduce((x,set)=>x+[...set].filter(id=>id!=='sf').length,0);
+const ta=totalAlerts();
+const cards=[
+['👤','Members',am.length,'#6366f1','members'],
+['💰','Income',fmtCur(totalIncome),'#0ea5e9','income'],
+['✅','Collected',fmtCur(totalPaid),'#22c55e','collected'],
+['⏳','Pending',fmtCur(totalIncome-totalPaid),'#f59e0b','pending'],
+['🧾','Expenses',fmtCur(totalExp),'#ef4444','expenses'],
+['📈','Net Profit',fmtCur(net),net>=0?'#22c55e':'#ef4444',''],
+];
+let h='<div class="grid2">';
+cards.forEach(function(c){
+h+='<div class="dash-card" style="border-left:4px solid '+c[3]+'"'+(c[4]?' onclick="showDashModal(\''+c[4]+'\')"':'')+'>'+
+'<div style="font-size:20px">'+c[0]+'</div>'+
+'<div><div style="font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase">'+c[1]+(c[4]?' <span style="font-size:9px">▶</span>':'')+'</div>'+
+'<div style="font-size:17px;font-weight:800;color:'+c[3]+'">'+c[2]+'</div></div></div>';
+});
+h+='</div>';
+if(ta>0){
+h+='<button style="width:100%;text-align:left;background:#1c0a00;border:none;border-radius:14px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;color:#fbbf24;margin-bottom:14px" onclick="gotoPage(\'alerts\')">'+
+'<div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">⚠️</span>'+
+'<div><div style="font-weight:800;font-size:15px">'+ta+' Alert'+(ta>1?'s':'')+' hain!</div>'+
+'<div style="font-size:12px;opacity:.85">'+(expiredList().length>0?expiredList().length+' expired · ':'')+
+(expiringList().length>0?expiringList().length+' expiring · ':'')+
+(pendingList().length>0?pendingList().length+' payment due':'')+
+'</div></div></div><span>→</span></button>';
+}
+h+='<div style="display:flex;gap:10px;margin-top:4px">'+
+'<button class="primary-btn" onclick="openAddMember()">+ Add Member</button>'+
+'<button class="secondary-btn" onclick="openAddExpense()">🧾 Expense</button></div>';
+h+='<div class="card col" style="margin-top:14px">'+
+'<div style="font-weight:700;color:#e2e8f0">Seat Overview — '+s.settings.libName+'</div>'+
+'<div style="display:flex;gap:16px">'+
+'<div><span style="color:#6366f1;font-weight:800;font-size:20px">'+s.settings.totalSeats+'</span> <span style="color:#94a3b8;font-size:12px">Total</span></div>'+
+'<div><span style="color:#ef4444;font-weight:800;font-size:20px">'+occSlots+'</span> <span style="color:#94a3b8;font-size:12px">Occupied</span></div>'+
+'<div><span style="color:#22c55e;font-weight:800;font-size:20px">'+(totalSlots-occSlots)+'</span> <span style="color:#94a3b8;font-size:12px">Vacant</span></div>'+
+'</div><button class="link-btn" onclick="gotoPage(\'seats\')">View Seat Map →</button></div>';
+return h;
+}
+function setAlertTab(t){currentAlertTab=t;renderPage();}
+function renderAlerts(){
+const pendingL=pendingList();const expiringL=expiringList();const expiredL=expiredList();
+const tabs=[['pending','💰 Pending',pendingL.length,'#f59e0b'],['expiring','⏳ Expiring',expiringL.length,'#f97316'],['expired','🔴 Expired',expiredL.length,'#ef4444']];
+let h='<div style="display:flex;gap:8px;margin-bottom:14px">';
+tabs.forEach(function(t){
+const isActive=currentAlertTab===t[0];
+h+='<button class="tab-btn" style="'+(isActive?'background:'+t[3]+'22;border-color:'+t[3]+';color:'+t[3]:'background:#1e293b;border-color:#334155;color:#64748b')+'" onclick="setAlertTab(\''+t[0]+'\')"><span style="font-size:11px">'+t[1]+'</span><span style="font-weight:800;font-size:18px">'+t[2]+'</span></button>';
+});
+h+='</div>';
+let list;
+if(currentAlertTab==='pending')list=pendingL;
+else if(currentAlertTab==='expiring')list=expiringL;
+else list=expiredL;
+if(!list.length){
+const emptyMsg={pending:'✅ Koi payment pending nahi!',expiring:'✅ Koi member expiring nahi!',expired:'✅ Koi member expired nahi!'};
+h+='<div class="empty">'+(emptyMsg[currentAlertTab]||'✅ Koi issue nahi!')+'</div>';
+return h;
+}
+list.forEach(function(m){
+const sh=getShift(m.shiftId);
+const pending=m.charge-(m.paidAmount||0);
+const daysLeft=daysBetween(today(),m.endDate);
+const payMsg='Namaskar '+m.name+' ji 🙏\n\nLibrary payment pending hai.\n💺 Seat: '+m.seatNo+'\n💰 Pending: ₹'+pending+'\n📅 End: '+fmtDate(m.endDate)+'\n\nKripya jaldi payment karein.\nDhanyawad 🙏';
+const renewMsg='Namaskar '+m.name+' ji 🙏\n\n'+(daysLeft<0?'Aapki membership expire ho gayi hai.':'Aapki membership '+daysLeft+' din mein expire hogi.')+'\n💺 Seat: '+m.seatNo+'\n📅 End: '+fmtDate(m.endDate)+'\n\nRenewal ke liye aayein.\nDhanyawad 🙏';
+let statusHtml='<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center">';
+if(daysLeft<0)statusHtml+='<span style="background:#450a0a;color:#f87171;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">⛔ Expired '+Math.abs(daysLeft)+' din pehle</span>';
+else if(daysLeft===0)statusHtml+='<span style="background:#431407;color:#f97316;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">⚡ Aaj expire!</span>';
+else if(daysLeft<=4)statusHtml+='<span style="background:#431407;color:#fb923c;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">⏳ '+daysLeft+' din baaki</span>';
+else statusHtml+='<span style="background:#052e16;color:#4ade80;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">✅ Active</span>';
+if(pending>0)statusHtml+='<span style="background:#451a03;color:#fb923c;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">💰 ₹'+pending+' due</span>';
+else statusHtml+='<span style="background:#052e16;color:#4ade80;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">✅ Paid</span>';
+statusHtml+='</div><div style="font-size:11px;color:#64748b;margin-top:4px">📅 End: '+fmtDate(m.endDate)+'</div>';
+h+='<div class="alert-card"><div style="display:flex;gap:10px;align-items:flex-start"><div class="member-avatar">'+m.name[0].toUpperCase()+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;color:#f1f5f9;font-size:15px">'+m.name+'</div><div style="font-size:12px;color:#94a3b8">📱 '+m.mobile+' · 🪑 Seat '+m.seatNo+' · '+sh.label+'</div>'+statusHtml+'</div></div><div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">';
+const waMsg=(currentAlertTab==='pending')?payMsg:renewMsg;
+h+='<button class="wa-btn" onclick="openWA(\''+m.mobile+'\',\''+waMsg.replace(/'/g,"\\'").replace(/\n/g,'\\n')+'\')">💬 WhatsApp</button>';
+if(pending>0)h+='<button class="pay-btn" onclick="openPayment('+m.id+')">💰 Pay</button>';
+if(currentAlertTab==='expiring'||currentAlertTab==='expired')h+='<button class="renew-btn" style="padding:7px 12px;font-size:12px" onclick="openRenewModal('+m.id+')">🔄 Renew</button>';
+h+='<button class="detail-btn" onclick="openDetail('+m.id+')">Details</button>';
+h+='<button class="delete-btn" onclick="confirmDeleteMember('+m.id+',\''+m.name.replace(/'/g,"\\'")+'\')">🗑</button>';
+h+='</div></div>';
+});
+return h;
+}
+function getMemberTabList(){
+if(currentMemberTab==='pending')return pendingList();
+if(currentMemberTab==='expiring')return expiringList();
+if(currentMemberTab==='expired')return expiredList();
+return activeMembers();
+}
+function setMemberTab(t){currentMemberTab=t;renderPage();}
+function renderMembers(){
+const am=activeMembers();
+const counts={all:am.length,pending:pendingList().length,expiring:expiringList().length,expired:expiredList().length};
+const tabs=[['all','All'],['pending','💰 Pending'],['expiring','⏳ Expiring'],['expired','🔴 Expired']];
+let h='<div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px">';
+tabs.forEach(function(t){
+const active=currentMemberTab===t[0];
+h+='<button style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1px solid '+(active?'#3b82f6':'#334155')+';background:'+(active?'#1e3a5f':'transparent')+';color:'+(active?'#60a5fa':'#64748b')+';font-size:12px;font-weight:700" onclick="setMemberTab(\''+t[0]+'\')">'+t[1]+' <span style="background:'+(active?'#3b82f6':'#1e293b')+';color:#fff;border-radius:20px;padding:1px 7px;font-size:11px">'+counts[t[0]]+'</span></button>';
+});
+h+='</div>';
+h+='<div style="display:flex;gap:10px;margin-bottom:14px;align-items:center"><input class="search-input" id="member-search" placeholder="Search name, seat, mobile..." oninput="filterMembers(this.value)"/><button class="primary-btn" style="flex-shrink:0" onclick="openAddMember()">+</button></div>';
+h+='<div id="members-list">'+renderMembersList(getMemberTabList())+'</div>';
+return h;
+}
+function filterMembers(q){
+const list=getMemberTabList().filter(m=>m.name.toLowerCase().includes(q.toLowerCase())||String(m.seatNo).includes(q)||m.mobile.includes(q));
+document.getElementById('members-list').innerHTML=renderMembersList(list);
+}
+function renderMembersList(list){
+if(!list.length)return'<div class="empty">No members found</div>';
+return list.map(function(m){
+const sh=getShift(m.shiftId);
+const pending=m.charge-(m.paidAmount||0);
+const daysLeft=daysBetween(today(),m.endDate);
+const isExpired=daysLeft<0;
+const isExpiring=daysLeft>=0&&daysLeft<=4;
+let statusLine='';
+if(isExpired)statusLine='<div style="font-size:12px;color:#f87171;font-weight:600">⛔ Expired '+Math.abs(daysLeft)+' din pehle</div>';
+else if(isExpiring)statusLine='<div style="font-size:12px;color:#fb923c;font-weight:600">⚠️ '+(daysLeft===0?'Aaj expire!':daysLeft+' din baaki')+'</div>';
+return'<div class="member-card">'+
+'<div class="member-avatar" onclick="openDetail('+m.id+')" style="cursor:pointer">'+m.name[0].toUpperCase()+'</div>'+
+'<div style="flex:1;min-width:0;cursor:pointer" onclick="openDetail('+m.id+')">'+
+'<div style="font-weight:700;color:#f1f5f9;font-size:15px">'+m.name+'</div>'+
+'<div style="font-size:12px;color:#94a3b8">📱 '+m.mobile+' · 🪑 '+m.seatNo+' · '+sh.label+'</div>'+
+'<div style="font-size:12px;color:#94a3b8">📅 '+fmtDate(m.startDate)+' → '+fmtDate(m.endDate)+'</div>'+
+statusLine+'</div>'+
+'<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0">'+
+'<span class="badge" style="background:'+(pending>0?'#451a03':'#052e16')+';color:'+(pending>0?'#fb923c':'#4ade80')+'">'+(pending>0?'₹'+pending+' due':'Paid ✓')+'</span>'+
+(isExpired||isExpiring?'<button class="renew-btn" onclick="openRenewModal('+m.id+')">🔄 Renew</button>':'')+
+'<div style="display:flex;gap:4px">'+
+'<button class="edit-btn" onclick="openEditMember('+m.id+')">✏️</button>'+
+'<button class="delete-btn" onclick="confirmDeleteMember('+m.id+',\''+m.name.replace(/'/g,"\\'")+'\')">🗑</button>'+
+'</div></div></div>';
+}).join('');
+}
+function renderSeats(){
+const s=getState();const am=activeMembers();
+const allDefinedShifts=getShifts();
+const cols=s.settings.totalSeats<=30?5:s.settings.totalSeats<=60?6:8;
+const clrs={vacant:{bg:'#052e16',border:'#16a34a',text:'#4ade80'},partial:{bg:'#451a03',border:'#f59e0b',text:'#fb923c'},full:{bg:'#1e1b4b',border:'#6366f1',text:'#a78bfa'}};
+const getSt=function(n){
+const seatMembers=am.filter(m=>String(m.seatNo)===String(n));
+if(!seatMembers.length)return'vacant';
+if(seatMembers.some(m=>m.shiftId==='sf'))return'full';
+let hasVacant=false;
+for(const sh of allDefinedShifts){
+const directOcc=seatMembers.some(m=>m.shiftId===sh.id);
+if(directOcc)continue;
+const timeBlocked=seatMembers.some(function(m){
+const existingShift=allDefinedShifts.find(s=>s.id===m.shiftId);
+if(!existingShift||!existingShift.time||!sh.time)return false;
+return shiftsOverlap(sh.time,existingShift.time);
+});
+if(!timeBlocked){hasVacant=true;break;}
+}
+return hasVacant?'partial':'full';
+};
+let h='<div style="display:flex;gap:12px;margin-bottom:14px">';
+[['vacant','#4ade80','Vacant'],['partial','#fb923c','Partial'],['full','#a78bfa','Full']].forEach(function(x){
+h+='<div style="display:flex;align-items:center;gap:5px;font-size:12px;color:#94a3b8"><div style="width:12px;height:12px;border-radius:3px;background:'+x[1]+'"></div>'+x[2]+'</div>';
+});
+h+='</div><div class="seat-grid" style="grid-template-columns:repeat('+cols+',1fr)">';
+for(let n=1;n<=s.settings.totalSeats;n++){
+const st=getSt(n);const c=clrs[st];
+h+='<button class="seat-btn" style="background:'+c.bg+';border-color:'+c.border+';color:'+c.text+(selectedSeat===n?';box-shadow:0 0 0 2px '+c.border:'')+'" onclick="selectSeat('+n+')">'+n+'</button>';
+}
+h+='</div>';
+if(selectedSeat){
+const seatKey=String(selectedSeat);
+const selM=am.filter(m=>String(m.seatNo)===seatKey);
+const fullEnabled=s.settings.fullShiftEnabled!==false;
+const allShiftsToShow=allDefinedShifts.concat(fullEnabled?[{id:'sf',label:'Full Shift',time:''}]:[]);
+const fullShiftMember=selM.find(m=>m.shiftId==='sf');
+h+='<div class="card col" style="margin-top:16px"><div style="font-weight:700;color:#e2e8f0;margin-bottom:8px">🪑 Seat '+selectedSeat+' — Shifts</div>';
+allShiftsToShow.forEach(function(sh){
+const directMember=selM.find(m=>m.shiftId===sh.id);
+const blockedByFullShift=!directMember&&sh.id!=='sf'&&fullShiftMember!=null;
+let timeOverlapMember=null;
+if(!directMember&&!blockedByFullShift&&sh.id!=='sf'){
+timeOverlapMember=selM.find(function(m){
+if(m.shiftId==='sf')return true;
+const existingShift=allDefinedShifts.find(s=>s.id===m.shiftId);
+if(!existingShift||!existingShift.time||!sh.time)return false;
+return shiftsOverlap(sh.time,existingShift.time);
+});
+}
+const sfRowBlocked=sh.id==='sf'&&selM.length>0&&!fullShiftMember;
+const isAnyBlocked=directMember||blockedByFullShift||timeOverlapMember||sfRowBlocked;
+const borderColor=isAnyBlocked?'#4f46e5':'#1e293b';
+h+='<div class="shift-row" style="border-color:'+borderColor+';margin-bottom:8px">'+
+'<div style="flex:1"><div style="font-weight:600;color:#e2e8f0;font-size:13px">'+sh.label+'</div>'+
+(sh.time?'<div style="font-size:11px;color:#64748b;margin-top:2px">'+sh.time+'</div>':'<div style="font-size:11px;color:#64748b;margin-top:2px">Poora Din</div>')+
+'</div>';
+if(directMember){
+h+='<div style="text-align:right"><div style="font-weight:700;color:#a78bfa;font-size:13px">'+directMember.name+'</div><div style="font-size:11px;color:#94a3b8">'+directMember.mobile+'</div></div>';
+}else if(blockedByFullShift){
+h+='<div style="text-align:right"><span class="badge" style="background:#1e1b4b;color:#a78bfa">⛔ Full Shift</span><div style="font-size:11px;color:#94a3b8;margin-top:4px">'+fullShiftMember.name+'</div></div>';
+}else if(timeOverlapMember){
+const overlapShift=allDefinedShifts.find(s=>s.id===timeOverlapMember.shiftId);
+h+='<div style="text-align:right"><span class="badge" style="background:#3b1f00;color:#fb923c">⚠️ Overlap</span><div style="font-size:11px;color:#94a3b8;margin-top:4px">'+timeOverlapMember.name+'</div><div style="font-size:10px;color:#64748b">'+(overlapShift?overlapShift.label:'')+'</div></div>';
+}else if(sfRowBlocked){
+h+='<div style="text-align:right"><span class="badge" style="background:#1e1b4b;color:#a78bfa">⛔ Blocked</span><div style="font-size:10px;color:#64748b;margin-top:4px">Regular shifts occupied</div></div>';
+}else{
+h+='<div style="display:flex;align-items:center;gap:6px"><span class="badge" style="background:#052e16;color:#4ade80">Vacant</span><button class="tiny-btn" onclick="openAddMemberPrefill('+selectedSeat+',\''+sh.id+'\')">+ Add</button></div>';
+}
+h+='</div>';
+});
+h+='</div>';
+}
+return h;
+}
+function selectSeat(n){selectedSeat=selectedSeat===n?null:n;renderPage();}
+function renderPayments(){
+const am=activeMembers();
+const pending=am.filter(m=>m.charge>(m.paidAmount||0));
+const paid=am.filter(m=>m.charge<=(m.paidAmount||0));
+function row(m){
+const p=m.charge-(m.paidAmount||0);const sh=getShift(m.shiftId);
+return'<div class="member-card" onclick="openPaymentDetail('+m.id+')" style="cursor:pointer"><div class="member-avatar">'+m.name[0]+'</div><div style="flex:1"><div style="font-weight:700;color:#f1f5f9">'+m.name+'</div><div style="font-size:12px;color:#94a3b8">Seat '+m.seatNo+' · '+sh.label+'</div><div style="font-size:12px;color:#94a3b8">'+fmtCur(m.charge)+' · '+(m.payments||[]).length+' installment(s)</div></div><div style="text-align:right"><div style="color:#e2e8f0;font-weight:800">'+fmtCur(m.paidAmount)+'</div>'+(p>0?'<div style="color:#fb923c;font-size:12px">₹'+p+' due</div><button class="pay-btn" style="margin-top:4px" onclick="event.stopPropagation();openPayment('+m.id+')">Pay</button>':'<div style="color:#4ade80;font-size:12px;font-weight:700">Paid ✓</div>')+'<div style="font-size:10px;color:#64748b;margin-top:2px">tap ▶</div></div></div>';
+}
+let h='';
+if(pending.length)h+='<div class="section-label">Pending ('+pending.length+')</div>'+pending.map(row).join('');
+if(paid.length)h+='<div class="section-label">Paid ('+paid.length+')</div>'+paid.map(row).join('');
+if(!am.length)h='<div class="empty">No members yet</div>';
+return h;
+}
+function openPaymentDetail(id){
+const m=getState().members.find(x=>x.id===id);
+const pending=m.charge-(m.paidAmount||0);
+const payments=m.payments||[];
+document.getElementById('modal-list-title').textContent='💳 '+m.name;
+let html='<div style="background:#0a0f1e;border-radius:12px;padding:14px;margin-bottom:14px"><div style="display:flex;justify-content:space-between;margin-bottom:10px"><div><div style="font-size:11px;color:#64748b">Total</div><div style="font-weight:800;color:#0ea5e9;font-size:16px">'+fmtCur(m.charge)+'</div></div><div><div style="font-size:11px;color:#64748b">Paid</div><div style="font-weight:800;color:#22c55e;font-size:16px">'+fmtCur(m.paidAmount)+'</div></div><div><div style="font-size:11px;color:#64748b">Pending</div><div style="font-weight:800;color:'+(pending>0?'#fb923c':'#4ade80')+';font-size:16px">'+fmtCur(pending)+'</div></div></div>';
+if(pending>0)html+='<button class="primary-btn" style="width:100%;justify-content:center" onclick="closeModal(\'modal-list\');openPayment('+m.id+')">💰 Record Payment</button>';
+html+='</div>';
+if(!payments.length){html+='<div class="empty">Koi payment nahi abhi</div>';}
+else{
+html+='<div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:10px">Installment History</div>';
+[...payments].reverse().forEach(function(p,i){
+html+='<div style="background:#0a0f1e;border-radius:12px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px"><div style="background:#052e16;color:#4ade80;width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px">'+(payments.length-i)+'</div><div><div style="color:#e2e8f0;font-weight:700;font-size:15px">'+fmtCur(p.amount)+'</div><div style="font-size:11px;color:#64748b;margin-top:2px">📅 '+fmtDate(p.date)+'</div><div style="font-size:11px;color:#64748b">🕐 '+fmtTime(p.date)+'</div></div></div><span style="color:#4ade80;font-size:18px">✅</span></div>';
+});
+}
+document.getElementById('modal-list-body').innerHTML=html;
+openModal('modal-list');
+}
+function renderExpenses(){
+const s=getState();const total=s.expenses.reduce((x,e)=>x+e.amount,0);
+let h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="color:#94a3b8;font-size:13px">Total: <span style="color:#ef4444;font-weight:800">'+fmtCur(total)+'</span></div><button class="primary-btn" onclick="openAddExpense()">+ Add</button></div>';
+if(!s.expenses.length)return h+'<div class="empty">No expenses added</div>';
+[...s.expenses].reverse().forEach(function(e){
+h+='<div class="member-card" onclick="openExpenseDetail('+e.id+')" style="cursor:pointer"><div class="member-avatar" style="background:#450a0a;color:#f87171">🧾</div><div style="flex:1"><div style="font-weight:700;color:#f1f5f9">'+e.name+'</div><div style="font-size:12px;color:#94a3b8">'+fmtDate(e.date)+'</div></div><div style="display:flex;align-items:center;gap:10px"><div style="color:#ef4444;font-weight:800">'+fmtCur(e.amount)+'</div><button class="delete-btn" onclick="event.stopPropagation();deleteExpense('+e.id+')">🗑</button></div></div>';
+});
+return h;
+}
+function openExpenseDetail(id){
+const s=getState();const e=s.expenses.find(x=>x.id===id);if(!e)return;
+document.getElementById('modal-list-title').textContent='🧾 Expense Detail';
+document.getElementById('modal-list-body').innerHTML='<div style="text-align:center;margin-bottom:20px"><div style="font-size:40px;margin-bottom:8px">🧾</div><div style="font-size:22px;font-weight:900;color:#f87171">'+fmtCur(e.amount)+'</div><div style="font-size:16px;font-weight:700;color:#f1f5f9;margin-top:4px">'+e.name+'</div></div><div style="background:#0a0f1e;border-radius:12px;padding:14px"><div class="info-row"><span style="color:#64748b;font-size:13px">Amount</span><span style="color:#f87171;font-weight:800">'+fmtCur(e.amount)+'</span></div><div class="info-row"><span style="color:#64748b;font-size:13px">Expense Date</span><span style="color:#e2e8f0;font-weight:600">'+fmtDate(e.date)+'</span></div><div class="info-row"><span style="color:#64748b;font-size:13px">Added on</span><span style="color:#e2e8f0;font-weight:600">'+(e.addedAt?fmtDate(e.addedAt):'—')+'</span></div><div class="info-row" style="border:none"><span style="color:#64748b;font-size:13px">Time</span><span style="color:#e2e8f0;font-weight:600">'+(e.addedAt?fmtTime(e.addedAt):'—')+'</span></div></div><button class="delete-btn" style="width:100%;justify-content:center;padding:12px;border-radius:12px;margin-top:14px;font-size:14px;font-weight:700" onclick="closeModal(\'modal-list\');deleteExpense('+e.id+')">🗑 Delete Expense</button>';
+openModal('modal-list');
+}
+function setAnaTab(t){currentAnaTab=t;renderPage();}
+function renderAnalytics(){
+const s=getState();
+const am=activeMembers();
+const now=today();
+const allActivities=s.activities||[];
+const totalIncome=am.reduce((x,m)=>x+(m.charge||0),0);
+const totalPaid=am.reduce((x,m)=>x+(m.paidAmount||0),0);
+const totalPending=totalIncome-totalPaid;
+const totalExp=s.expenses.reduce((x,e)=>x+(e.amount||0),0);
+const netProfit=totalPaid-totalExp;
+const fullyPaid=am.filter(m=>(m.paidAmount||0)>=m.charge).length;
+const paymentPending=am.filter(m=>(m.paidAmount||0)<m.charge).length;
+const expiredCount=am.filter(m=>daysBetween(now,m.endDate)<0).length;
+const expiringSoon=am.filter(m=>{const d=daysBetween(now,m.endDate);return d>=0&&d<=4;});
+
+// 1. Definition of Tabs
+const tabs = [
+  ['finance', '💰 Finance'],
+  ['members', '👤 Members'],
+  ['seats', '🪑 Seats'],
+  ['logs', '🕖 Logs']
+];
+let h = '<div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px">';
+tabs.forEach(t => {
+  const active = currentAnaTab === t[0];
+  h += `<button style="flex-shrink:0;padding:7px 12px;border-radius:20px;border:1px solid ${active?'#3b82f6':'#334155'};background:${active?'#1e3a5f':'transparent'};color:${active?'#60a5fa':'#64748b'};font-size:12px;font-weight:700" onclick="setAnaTab('${t[0]}')">${t[1]}</button>`;
+});
+h += '</div>';
+
+if (currentAnaTab === 'finance') {
+  h += `<div class="ana-card">
+<div class="ana-card-title">💰 Overall Financials</div>
+<div class="info-row"><span class="info-label">Total Expected Income<br><small style="font-size:10px;color:#64748b;font-weight:500">Sabhi active members se total expected amount</small></span><span class="info-val" style="color:#0ea5e9">${fmtCur(totalIncome)}</span></div>
+<div class="info-row"><span class="info-label">Total Collected<br><small style="font-size:10px;color:#64748b;font-weight:500">Ab tak receive hui payments</small></span><span class="info-val" style="color:#22c55e">${fmtCur(totalPaid)}</span></div>
+<div class="info-row"><span class="info-label">Pending Amount<br><small style="font-size:10px;color:#64748b;font-weight:500">Jo paisa aana baaki hai</small></span><span class="info-val" style="color:#f59e0b">${fmtCur(totalPending)}</span></div>
+<div class="info-row"><span class="info-label">Total Expenses<br><small style="font-size:10px;color:#64748b;font-weight:500">Library ka kul kharcha</small></span><span class="info-val" style="color:#ef4444">${fmtCur(totalExp)}</span></div>
+<div class="info-row" style="border:none"><span class="info-label" style="font-weight:700;color:#e2e8f0">Net Profit / Loss<br><small style="font-size:10px;color:#64748b;font-weight:500">Collected amount - Kharcha</small></span><span class="info-val" style="font-size:20px;font-weight:900;color:${netProfit>=0?'#22c55e':'#ef4444'}">${fmtCur(netProfit)}</span></div>
+</div>`;
+
+  const thisMonth = now.substr(0,7);
+  const monthDate = new Date(thisMonth+'-01');
+  const monthName = monthDate.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  const monthIncome = am.reduce((x,m)=>x+(m.payments||[]).filter(p=>p.date&&p.date.startsWith(thisMonth)).reduce((a,p)=>a+p.amount,0),0);
+  const monthMembers = am.filter(m=>m.addedAt&&m.addedAt.startsWith(thisMonth)).length;
+  const monthExpAmt = s.expenses.filter(e=>e.date&&e.date.startsWith(thisMonth)).reduce((x,e)=>x+e.amount,0);
+
+  h += `<div class="ana-card">
+<div class="ana-card-title">📅 ${monthName} Summary</div>
+<div class="info-row"><span class="info-label">Income This Month</span><span class="info-val" style="color:#22c55e">${fmtCur(monthIncome)}</span></div>
+<div class="info-row"><span class="info-label">New Admissions</span><span class="info-val" style="color:#60a5fa">${monthMembers}</span></div>
+<div class="info-row" style="border:none"><span class="info-label">Expenses This Month</span><span class="info-val" style="color:#ef4444">${fmtCur(monthExpAmt)}</span></div>
+</div>`;
+}
+else if (currentAnaTab === 'members') {
+  h += `<div class="ana-card">
+<div class="ana-card-title">👤 Members Overview</div>
+<div class="info-row"><span class="info-label">Total Active Members</span><span class="info-val" style="font-size:18px">${am.length}</span></div>
+<div class="info-row"><span class="info-label">Fully Paid ✅<br><small style="font-size:10px;color:#64748b;font-weight:500">Koi due pending nahi hai</small></span><span class="info-val" style="color:#22c55e">${fullyPaid}</span></div>
+<div class="info-row"><span class="info-label">Payment Pending 💰<br><small style="font-size:10px;color:#64748b;font-weight:500">Jinki fee jama karni hai</small></span><span class="info-val" style="color:#f59e0b">${paymentPending}</span></div>
+<div class="info-row"><span class="info-label">Membership Expired 🔴<br><small style="font-size:10px;color:#64748b;font-weight:500">Date cross ho chuki hai</small></span><span class="info-val" style="color:#ef4444">${expiredCount}</span></div>
+<div class="info-row" style="border:none"><span class="info-label">Expiring in 4 Days ⏳<br><small style="font-size:10px;color:#64748b;font-weight:500">Jaldi khatam hone wale members</small></span><span class="info-val" style="color:#fb923c">${expiringSoon.length}</span></div>
+</div>`;
+
+  h += `<div class="ana-card"><div class="ana-card-title">⏳ Expiring Soon List</div>`;
+  if(expiringSoon.length===0){
+    h += '<div style="color:#4ade80;font-size:13px;text-align:center;padding:12px 0">✅ Sabhi members active hain. Koi list mein nahi.</div>';
+  }else{
+    [...expiringSoon].sort((a,b)=>daysBetween(now,a.endDate)-daysBetween(now,b.endDate)).forEach(m=>{
+      const d = daysBetween(now,m.endDate);
+      const sh = getShift(m.shiftId);
+      h += `<div class="info-row" style="align-items:flex-start">
+<div>
+<div style="font-weight:700;color:#f1f5f9;font-size:14px">${m.name}</div>
+<div style="font-size:11px;color:#94a3b8;margin-top:2px">🪑 Seat ${m.seatNo} · ${sh.label}</div>
+<div style="font-size:11px;color:#94a3b8">📅 End Date: ${fmtDate(m.endDate)}</div>
+</div>
+<span style="background:${d===0?'#431407':'#451a03'};color:${d===0?'#f97316':'#fb923c'};padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;flex-shrink:0">${d===0?'Aaj!':d+' din'}</span>
+</div>`;
+    });
+  }
+  h += '</div>';
+}
+else if (currentAnaTab === 'seats') {
+  const ssm=seatShiftMap();
+  const totalSeats=s.settings.totalSeats;
+  const occupiedSeats=Object.keys(ssm).length;
+  const vacantSeats=totalSeats-occupiedSeats;
+
+  h += `<div class="ana-card">
+<div class="ana-card-title">🪑 Seats Overview</div>
+<div class="info-row"><span class="info-label">Total Seats Capacity</span><span class="info-val" style="font-size:18px">${totalSeats}</span></div>
+<div class="info-row"><span class="info-label">Occupied (Partial or Full)<br><small style="font-size:10px;color:#64748b;font-weight:500">Kam se kam ek shift book hai</small></span><span class="info-val" style="color:#ef4444">${occupiedSeats}</span></div>
+<div class="info-row" style="border:none"><span class="info-label">Fully Vacant<br><small style="font-size:10px;color:#64748b;font-weight:500">Ek bhi shift book nahi hai</small></span><span class="info-val" style="color:#22c55e">${vacantSeats}</span></div>
+</div>`;
+
+  const shifts=getShifts();
+  const shiftRows=shifts.map(sh=>{
+    const shM=am.filter(m=>m.shiftId===sh.id);
+    return {label:sh.label,time:sh.time,members:shM.length,income:shM.reduce((x,m)=>x+(m.charge||0),0),collected:shM.reduce((x,m)=>x+(m.paidAmount||0),0)};
+  });
+  const sfM=am.filter(m=>m.shiftId==='sf');
+  if(sfM.length>0) shiftRows.push({label:'Full Shift',time:'Poora Din',members:sfM.length,income:sfM.reduce((x,m)=>x+(m.charge||0),0),collected:sfM.reduce((x,m)=>x+(m.paidAmount||0),0)});
+
+  h += `<div class="ana-card"><div class="ana-card-title">⏰ Shift Performance</div>`;
+  if(shiftRows.length===0){
+    h += '<div style="color:#475569;font-size:13px;text-align:center;padding:12px 0">No shifts available.</div>';
+  }else{
+    shiftRows.forEach(sr=>{
+      const pen=sr.income-sr.collected;
+      h += `<div style="background:#0a0f1e;border-radius:12px;padding:14px;margin-bottom:12px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:10px">
+<div>
+<div style="font-weight:700;color:#e2e8f0;font-size:14px">${sr.label}</div>
+<div style="font-size:11px;color:#94a3b8">${sr.time||'Full Day Access'}</div>
+</div>
+<span style="background:#1e3a5f;color:#60a5fa;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700">${sr.members} members</span>
+</div>
+<div style="display:flex;gap:8px">
+<div style="flex:1;background:#0d1526;border-radius:10px;padding:12px 8px;text-align:center">
+<div style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:4px">Potential</div>
+<div style="font-size:14px;font-weight:800;color:#0ea5e9">${fmtCur(sr.income)}</div>
+</div>
+<div style="flex:1;background:#0d1526;border-radius:10px;padding:12px 8px;text-align:center">
+<div style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:4px">Collected</div>
+<div style="font-size:14px;font-weight:800;color:#22c55e">${fmtCur(sr.collected)}</div>
+</div>
+<div style="flex:1;background:#0d1526;border-radius:10px;padding:12px 8px;text-align:center">
+<div style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:4px">Pending</div>
+<div style="font-size:14px;font-weight:800;color:${pen>0?'#f59e0b':'#22c55e'}">${fmtCur(pen)}</div>
+</div>
+</div>
+</div>`;
+    });
+  }
+  h += '</div>';
+}
+else if (currentAnaTab === 'logs') {
+  const typeConfig={
+    payment:{icon:'💰',bg:'#052e16',color:'#4ade80'},
+    member_add:{icon:'👤',bg:'#1e3a5f',color:'#60a5fa'},
+    member_del:{icon:'🗑',bg:'#450a0a',color:'#f87171'},
+    expense:{icon:'🧾',bg:'#3b1f00',color:'#fb923c'},
+    renew:{icon:'🔄',bg:'#1e3a5f',color:'#34d399'},
+    settings:{icon:'⚙️',bg:'#1e1b4b',color:'#a78bfa'}
+  };
+
+  h += `<div class="ana-card" style="padding:0;background:transparent;border:none"><div class="ana-card-title" style="padding:0 4px">🕐 System Activity Logs</div>`;
+  if(!allActivities.length){
+    h += '<div style="color:#475569;font-size:13px;text-align:center;padding:20px">Koi activity nahi hai abhi.</div>';
+  }else{
+    h += `<div style="background:rgba(13,21,38,0.7);backdrop-filter:blur(10px);border-radius:16px;padding:16px;border:1px solid rgba(255,255,255,0.05);">`;
+    allActivities.slice(0,50).forEach((a,idx)=>{
+      const cfg=typeConfig[a.type]||{icon:'📌',bg:'#1e293b',color:'#94a3b8'};
+      const isLast = idx === Math.min(allActivities.length,50)-1;
+      h += `<div class="activity-item" style="${isLast?'border:none;padding-bottom:0':''}">
+<div class="act-icon" style="background:${cfg.bg};color:${cfg.color}">${cfg.icon}</div>
+<div style="flex:1">
+<div style="color:#e2e8f0;font-size:13px;font-weight:600">${a.msg}</div>
+<div style="font-size:11px;color:#94a3b8;margin-top:4px;display:flex;align-items:center;gap:4px"><span>⌚</span> ${fmtDT(a.time)}</div>
+</div>
+</div>`;
+    });
+    h += `</div>`;
+  }
+  h += '</div>';
+}
+
+return h;
+}
+function renderExport(){
+return`<div class="section-label">📋 Members Report</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+<button class="export-btn-item" onclick="exportMembersDoc()">📄<span>Members DOC</span></button>
+<button class="export-btn-item" onclick="exportMembersPDF()">📕<span>Members PDF</span></button>
+</div>
+<div class="section-label">🧾 Expenses Report</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+<button class="export-btn-item" onclick="exportExpensesDoc()">📄<span>Expenses DOC</span></button>
+<button class="export-btn-item" onclick="exportExpensesPDF()">📕<span>Expenses PDF</span></button>
+</div>
+<div class="section-label">📊 Monthly Report</div>
+<div class="field" style="margin-top:8px"><label>Select Month</label>
+<input class="input" id="report-month" type="month" value="${today().substr(0,7)}"/></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+<button class="export-btn-item" onclick="exportMonthlyDoc()">📄<span>Monthly DOC</span></button>
+<button class="export-btn-item" onclick="exportMonthlyPDF()">📕<span>Monthly PDF</span></button>
+</div>
+`;
+}
+// exportTransferFile removed — cloud sync handles this
+// importTransferFile removed — cloud sync handles this
+function exportMembersDoc(){
+const am=activeMembers();
+const rows=am.map((m,i)=>{const sh=getShift(m.shiftId);const p=m.charge-(m.paidAmount||0);return`<tr><td>${i+1}</td><td><strong>${m.name}</strong><br><span style="font-size:11px;color:#666">📱 ${m.mobile}</span></td><td>${m.seatNo}</td><td>${sh.label}</td><td>₹${(m.charge||0).toLocaleString('en-IN')}</td><td style="color:#16a34a">₹${(m.paidAmount||0).toLocaleString('en-IN')}</td><td style="color:${p>0?'#dc2626':'#16a34a'}">${p>0?'₹'+p.toLocaleString('en-IN'):'Paid ✓'}</td><td>${fmtDate(m.startDate)}</td><td>${fmtDate(m.endDate)}</td></tr>`;}).join('');
+const s=getState();
+downloadDoc('members_list.doc',buildDocHTML('Members List',`<h2 style="color:#1e3a5f;margin-bottom:4px">📖 ${s.settings.libName}</h2><p style="color:#64748b;margin-bottom:20px">Members Report — ${fmtDT(new Date().toISOString())}</p><table><thead><tr><th>#</th><th>Member</th><th>Seat</th><th>Shift</th><th>Charge</th><th>Paid</th><th>Pending</th><th>Start</th><th>End</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="4"><strong>Total</strong></td><td><strong>₹${am.reduce((x,m)=>x+(m.charge||0),0).toLocaleString('en-IN')}</strong></td><td><strong>₹${am.reduce((x,m)=>x+(m.paidAmount||0),0).toLocaleString('en-IN')}</strong></td><td><strong>₹${am.reduce((x,m)=>x+(m.charge-(m.paidAmount||0)),0).toLocaleString('en-IN')}</strong></td><td colspan="2"></td></tr></tfoot></table><p style="margin-top:16px;color:#64748b;font-size:12px">Total: <strong>${am.length}</strong> members</p>`));
+showToast('Members DOC ready! ✅');
+}
+function exportMembersPDF(){
+const am=activeMembers();
+const rows=am.map((m,i)=>{const sh=getShift(m.shiftId);const p=m.charge-(m.paidAmount||0);return`<tr><td>${i+1}</td><td><strong>${m.name}</strong><br><small>${m.mobile}</small></td><td>${m.seatNo}</td><td>${sh.label}</td><td>₹${(m.charge||0).toLocaleString('en-IN')}</td><td style="color:#16a34a">₹${(m.paidAmount||0).toLocaleString('en-IN')}</td><td style="color:${p>0?'#dc2626':'#16a34a'}">${p>0?'₹'+p.toLocaleString('en-IN'):'Paid ✓'}</td><td>${fmtDate(m.startDate)}</td><td>${fmtDate(m.endDate)}</td></tr>`;}).join('');
+const s=getState();
+openPrintWindow(buildPDFHTML('Members List',`<div class="pdf-header"><h1>📖 ${s.settings.libName}</h1><p>Members Report — ${fmtDT(new Date().toISOString())}</p></div><table><thead><tr><th>#</th><th>Member</th><th>Seat</th><th>Shift</th><th>Charge</th><th>Paid</th><th>Pending</th><th>Start</th><th>End</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="4"><strong>Total</strong></td><td><strong>₹${am.reduce((x,m)=>x+(m.charge||0),0).toLocaleString('en-IN')}</strong></td><td><strong>₹${am.reduce((x,m)=>x+(m.paidAmount||0),0).toLocaleString('en-IN')}</strong></td><td><strong>₹${am.reduce((x,m)=>x+(m.charge-(m.paidAmount||0)),0).toLocaleString('en-IN')}</strong></td><td colspan="2"></td></tr></tfoot></table>`),'Members_List');
+showToast('PDF print dialog khul gaya! ✅');
+}
+function exportExpensesDoc(){
+const s=getState();const total=s.expenses.reduce((x,e)=>x+e.amount,0);
+const rows=[...s.expenses].reverse().map((e,i)=>`<tr><td>${i+1}</td><td><strong>${e.name}</strong></td><td>${fmtDate(e.date)}</td><td style="color:#dc2626">₹${e.amount.toLocaleString('en-IN')}</td></tr>`).join('');
+downloadDoc('expenses_report.doc',buildDocHTML('Expenses',`<h2 style="color:#1e3a5f;margin-bottom:4px">📖 ${s.settings.libName}</h2><p style="color:#64748b;margin-bottom:20px">Expenses — ${fmtDT(new Date().toISOString())}</p><table><thead><tr><th>#</th><th>Expense</th><th>Date</th><th>Amount</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3"><strong>Total</strong></td><td><strong style="color:#dc2626">₹${total.toLocaleString('en-IN')}</strong></td></tr></tfoot></table>`));
+showToast('Expenses DOC ready! ✅');
+}
+function exportExpensesPDF(){
+const s=getState();const total=s.expenses.reduce((x,e)=>x+e.amount,0);
+const rows=[...s.expenses].reverse().map((e,i)=>`<tr><td>${i+1}</td><td><strong>${e.name}</strong></td><td>${fmtDate(e.date)}</td><td style="color:#dc2626">₹${e.amount.toLocaleString('en-IN')}</td></tr>`).join('');
+openPrintWindow(buildPDFHTML('Expenses',`<div class="pdf-header"><h1>📖 ${s.settings.libName}</h1><p>Expenses — ${fmtDT(new Date().toISOString())}</p></div><table><thead><tr><th>#</th><th>Expense</th><th>Date</th><th>Amount</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3"><strong>Total</strong></td><td><strong style="color:#dc2626">₹${total.toLocaleString('en-IN')}</strong></td></tr></tfoot></table>`),'Expenses');
+showToast('PDF print dialog khul gaya! ✅');
+}
+function exportMonthlyDoc(){
+const month=(document.getElementById('report-month')?.value)||today().substr(0,7);
+downloadDoc('monthly_'+month+'.doc',buildMonthlyHTML(month,'doc'));
+showToast('Monthly DOC ready! ✅');
+}
+function exportMonthlyPDF(){
+const month=(document.getElementById('report-month')?.value)||today().substr(0,7);
+openPrintWindow(buildMonthlyHTML(month,'pdf'),'Monthly_'+month);
+showToast('PDF print dialog khul gaya! ✅');
+}
+function buildDocHTML(title,body){
+return`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${title}</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#1e293b;max-width:900px;margin:0 auto}table{width:100%;border-collapse:collapse;margin-top:12px}th{background:#1e3a5f;color:#fff;padding:10px 12px;text-align:left;font-size:12px;text-transform:uppercase}td{padding:9px 12px;border-bottom:1px solid #e2e8f0;font-size:13px}tfoot td{background:#f0f9ff;font-weight:700;border-top:2px solid #bae6fd;color:#0ea5e9}tr:nth-child(even) td{background:#f8fafc}.sum-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e2e8f0;font-size:13px}</style></head><body>${body}</body></html>`;
+}
+function buildPDFHTML(title,body){
+return`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${title}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:20px;color:#1e293b;font-size:13px}.pdf-header{background:#1e3a5f;color:#fff;padding:20px;border-radius:8px;margin-bottom:20px}.pdf-header h1{font-size:20px;margin-bottom:4px}.pdf-header p{font-size:12px;opacity:.8}table{width:100%;border-collapse:collapse;margin-bottom:16px}th{background:#1e3a5f;color:#fff;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;white-space:nowrap}td{padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:12px}tfoot td{background:#f0f9ff;font-weight:700;border-top:2px solid #bae6fd;color:#0ea5e9}tr:nth-child(even) td{background:#f8fafc}small{color:#94a3b8;font-size:10px;display:block}.summary-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:16px}.sum-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e2e8f0;font-size:13px}.sum-row:last-child{border-bottom:none;font-weight:700}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}.card{padding:12px;border-radius:8px;border:1px solid #e2e8f0;text-align:center}.card-lbl{font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:4px}.card-val{font-size:18px;font-weight:900}.sec-title{font-size:12px;font-weight:800;text-transform:uppercase;color:#64748b;margin:16px 0 8px;padding-bottom:4px;border-bottom:2px solid #e2e8f0;letter-spacing:1px}.alert{padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:10px}.alert-green{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}.alert-orange{background:#fffbeb;border:1px solid #fde68a;color:#92400e}@media print{body{padding:10px}@page{margin:15mm;size:A4}}</style><script>window.onload=function(){
+  var ua=navigator.userAgent||'';
+  var isAndroid=ua.indexOf('Android')>-1;
+  if(!isAndroid){window.print();}
+  var btn=document.getElementById('dl-btn');
+  if(btn)btn.style.display='flex';
+};<\/script></head><body>
+<div id="dl-btn" style="display:none;position:fixed;bottom:20px;right:20px;z-index:999;gap:10px;flex-direction:column;align-items:flex-end">
+<button onclick="window.print()" style="background:#1e3a5f;color:#fff;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,0.3);cursor:pointer">🖨️ Print / Save PDF</button>
+<button onclick="window.close()" style="background:#ef4444;color:#fff;border:none;border-radius:12px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer">✕ Close</button>
+</div>
+${body}</body></html>`;
+}
+function buildMonthlyHTML(month,mode){
+const am=activeMembers();const s=getState();
+const monthDate=new Date(month+'-01');
+const monthName=monthDate.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+const monthExp=s.expenses.filter(e=>e.date&&e.date.startsWith(month));
+const totalExpAmt=monthExp.reduce((x,e)=>x+e.amount,0);
+const totalCollected=am.reduce((x,m)=>x+(m.payments||[]).filter(p=>p.date&&p.date.startsWith(month)).reduce((a,p)=>a+p.amount,0),0);
+const totalCharge=am.reduce((x,m)=>x+(m.charge||0),0);
+const totalPaidAll=am.reduce((x,m)=>x+(m.paidAmount||0),0);
+const totalPending=totalCharge-totalPaidAll;
+const netProfit=totalCollected-totalExpAmt;
+const addedThisMonth=am.filter(m=>m.addedAt&&m.addedAt.startsWith(month));
+const currentlyExpiring=am.filter(m=>{const d=daysBetween(today(),m.endDate);return d>=0&&d<=4;});
+const currentlyExpired=am.filter(m=>daysBetween(today(),m.endDate)<0);
+const currentlyPending=am.filter(m=>(m.paidAmount||0)<m.charge);
+const monthPayments=am.flatMap(m=>(m.payments||[]).filter(p=>p.date&&p.date.startsWith(month)).map(p=>({name:m.name,seat:m.seatNo,amount:p.amount,date:p.date}))).sort((a,b)=>new Date(b.date)-new Date(a.date));
+const shiftWise=getShifts().map(sh=>{const shM=am.filter(m=>m.shiftId===sh.id);return{label:sh.label,members:shM.length,charge:shM.reduce((x,m)=>x+(m.charge||0),0),paid:shM.reduce((x,m)=>x+(m.paidAmount||0),0)};});
+const sfM=am.filter(m=>m.shiftId==='sf');
+if(sfM.length>0)shiftWise.push({label:'Full Shift',members:sfM.length,charge:sfM.reduce((x,m)=>x+(m.charge||0),0),paid:sfM.reduce((x,m)=>x+(m.paidAmount||0),0)});
+const body=`
+${mode==='pdf'?`<div class="pdf-header"><h1>📖 ${s.settings.libName}</h1><p>Monthly Report — ${monthName} | ${fmtDT(new Date().toISOString())}</p></div>`:`<h2 style="color:#1e3a5f">📖 ${s.settings.libName}</h2><p style="color:#64748b;margin-bottom:20px">Monthly Report — ${monthName}</p>`}
+${mode==='pdf'?`<div class="cards"><div class="card" style="background:#eff6ff;border-color:#bfdbfe"><div class="card-lbl">Expected</div><div class="card-val" style="color:#0ea5e9">₹${totalCharge.toLocaleString('en-IN')}</div></div><div class="card" style="background:#f0fdf4;border-color:#bbf7d0"><div class="card-lbl">Collected</div><div class="card-val" style="color:#16a34a">₹${totalPaidAll.toLocaleString('en-IN')}</div></div><div class="card" style="background:#fffbeb;border-color:#fde68a"><div class="card-lbl">Pending</div><div class="card-val" style="color:#d97706">₹${totalPending.toLocaleString('en-IN')}</div></div><div class="card" style="background:#fef2f2;border-color:#fecaca"><div class="card-lbl">Expenses</div><div class="card-val" style="color:#dc2626">₹${totalExpAmt.toLocaleString('en-IN')}</div></div><div class="card" style="background:#f0fdf4;border-color:#bbf7d0"><div class="card-lbl">This Month</div><div class="card-val" style="color:#16a34a">₹${totalCollected.toLocaleString('en-IN')}</div></div><div class="card" style="background:${netProfit>=0?'#f0fdf4':'#fef2f2'};border-color:${netProfit>=0?'#bbf7d0':'#fecaca'}"><div class="card-lbl">Net Profit</div><div class="card-val" style="color:${netProfit>=0?'#16a34a':'#dc2626'}">₹${netProfit.toLocaleString('en-IN')}</div></div></div>`:''}
+<div class="${mode==='pdf'?'sec-title':''}">💰 Financial Summary</div>
+<div class="${mode==='pdf'?'summary-box':''}">
+<div class="sum-row"><span>Total Expected Income</span><strong style="color:#0ea5e9">₹${totalCharge.toLocaleString('en-IN')}</strong></div>
+<div class="sum-row"><span>Total Collected (All Time)</span><strong style="color:#16a34a">₹${totalPaidAll.toLocaleString('en-IN')}</strong></div>
+<div class="sum-row"><span>Collected This Month</span><strong style="color:#16a34a">₹${totalCollected.toLocaleString('en-IN')}</strong></div>
+<div class="sum-row"><span>Total Pending</span><strong style="color:#d97706">₹${totalPending.toLocaleString('en-IN')}</strong></div>
+<div class="sum-row"><span>Expenses This Month</span><strong style="color:#dc2626">₹${totalExpAmt.toLocaleString('en-IN')}</strong></div>
+<div class="sum-row"><span>Net Profit This Month</span><strong style="color:${netProfit>=0?'#16a34a':'#dc2626'}">₹${netProfit.toLocaleString('en-IN')}</strong></div>
+</div>
+<div class="${mode==='pdf'?'sec-title':''}">👤 Members Summary</div>
+<div class="sum-row"><span>Total Active Members</span><strong>${am.length}</strong></div>
+<div class="sum-row"><span>New Members This Month</span><strong style="color:#16a34a">${addedThisMonth.length}</strong></div>
+<div class="sum-row"><span>Expiring Soon (4 days)</span><strong style="color:#d97706">${currentlyExpiring.length}</strong></div>
+<div class="sum-row"><span>Expired</span><strong style="color:#dc2626">${currentlyExpired.length}</strong></div>
+<div class="sum-row"><span>Pending Payment</span><strong style="color:#d97706">${currentlyPending.length}</strong></div>
+${currentlyPending.length>0?`<div class="${mode==='pdf'?'sec-title':''}">💰 Pending Payments</div><table><thead><tr><th>#</th><th>Member</th><th>Seat</th><th>Shift</th><th>Total</th><th>Paid</th><th>Pending</th></tr></thead><tbody>${currentlyPending.map((m,i)=>{const sh=getShift(m.shiftId);const p=m.charge-(m.paidAmount||0);return`<tr><td>${i+1}</td><td><strong>${m.name}</strong><br><small>${m.mobile}</small></td><td>${m.seatNo}</td><td>${sh.label}</td><td>₹${(m.charge||0).toLocaleString('en-IN')}</td><td style="color:#16a34a">₹${(m.paidAmount||0).toLocaleString('en-IN')}</td><td style="color:#dc2626"><strong>₹${p.toLocaleString('en-IN')}</strong></td></tr>`;}).join('')}</tbody><tfoot><tr><td colspan="6"><strong>Total Pending</strong></td><td><strong>₹${currentlyPending.reduce((x,m)=>x+(m.charge-(m.paidAmount||0)),0).toLocaleString('en-IN')}</strong></td></tr></tfoot></table>`:`<div class="${mode==='pdf'?'alert alert-green':''}">✅ Koi payment pending nahi!</div>`}
+${currentlyExpired.length>0?`<div class="${mode==='pdf'?'sec-title':''}">🔴 Expired Members</div><table><thead><tr><th>#</th><th>Member</th><th>Seat</th><th>Shift</th><th>End Date</th><th>Since</th></tr></thead><tbody>${currentlyExpired.map((m,i)=>{const sh=getShift(m.shiftId);const d=Math.abs(daysBetween(today(),m.endDate));return`<tr><td>${i+1}</td><td><strong>${m.name}</strong><br><small>${m.mobile}</small></td><td>${m.seatNo}</td><td>${sh.label}</td><td>${fmtDate(m.endDate)}</td><td style="color:#dc2626">${d} din pehle</td></tr>`;}).join('')}</tbody></table>`:''}
+${currentlyExpiring.length>0?`<div class="${mode==='pdf'?'sec-title':''}">⏳ Expiring Soon</div><table><thead><tr><th>#</th><th>Member</th><th>Seat</th><th>Shift</th><th>End Date</th><th>Days Left</th></tr></thead><tbody>${currentlyExpiring.map((m,i)=>{const sh=getShift(m.shiftId);const d=daysBetween(today(),m.endDate);return`<tr><td>${i+1}</td><td><strong>${m.name}</strong><br><small>${m.mobile}</small></td><td>${m.seatNo}</td><td>${sh.label}</td><td>${fmtDate(m.endDate)}</td><td style="color:#d97706"><strong>${d===0?'Aaj!':d+' din'}</strong></td></tr>`;}).join('')}</tbody></table>`:''}
+${addedThisMonth.length>0?`<div class="${mode==='pdf'?'sec-title':''}">✅ New Members This Month</div><table><thead><tr><th>#</th><th>Member</th><th>Seat</th><th>Shift</th><th>Start</th><th>End</th><th>Charge</th></tr></thead><tbody>${addedThisMonth.map((m,i)=>{const sh=getShift(m.shiftId);return`<tr><td>${i+1}</td><td><strong>${m.name}</strong><br><small>${m.mobile}</small></td><td>${m.seatNo}</td><td>${sh.label}</td><td>${fmtDate(m.startDate)}</td><td>${fmtDate(m.endDate)}</td><td style="color:#16a34a">₹${(m.charge||0).toLocaleString('en-IN')}</td></tr>`;}).join('')}</tbody><tfoot><tr><td colspan="6"><strong>Total</strong></td><td><strong>₹${addedThisMonth.reduce((x,m)=>x+(m.charge||0),0).toLocaleString('en-IN')}</strong></td></tr></tfoot></table>`:''}
+<div class="${mode==='pdf'?'sec-title':''}">⏰ Shift-wise Income</div>
+<table><thead><tr><th>Shift</th><th>Members</th><th>Total</th><th>Collected</th><th>Pending</th></tr></thead><tbody>${shiftWise.map(sw=>`<tr><td><strong>${sw.label}</strong></td><td>${sw.members}</td><td>₹${sw.charge.toLocaleString('en-IN')}</td><td style="color:#16a34a">₹${sw.paid.toLocaleString('en-IN')}</td><td style="color:#d97706">₹${(sw.charge-sw.paid).toLocaleString('en-IN')}</td></tr>`).join('')}</tbody><tfoot><tr><td><strong>Total</strong></td><td>${am.length}</td><td>₹${totalCharge.toLocaleString('en-IN')}</td><td>₹${totalPaidAll.toLocaleString('en-IN')}</td><td>₹${totalPending.toLocaleString('en-IN')}</td></tr></tfoot></table>
+${monthExp.length>0?`<div class="${mode==='pdf'?'sec-title':''}">🧾 Expenses This Month</div><table><thead><tr><th>#</th><th>Expense</th><th>Date</th><th>Amount</th></tr></thead><tbody>${monthExp.map((e,i)=>`<tr><td>${i+1}</td><td><strong>${e.name}</strong></td><td>${fmtDate(e.date)}</td><td style="color:#dc2626">₹${e.amount.toLocaleString('en-IN')}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="3"><strong>Total</strong></td><td><strong style="color:#dc2626">₹${totalExpAmt.toLocaleString('en-IN')}</strong></td></tr></tfoot></table>`:`<div class="${mode==='pdf'?'alert alert-green':''}">✅ Is month koi expense nahi!</div>`}
+${monthPayments.length>0?`<div class="${mode==='pdf'?'sec-title':''}">💳 Payment History</div><table><thead><tr><th>#</th><th>Member</th><th>Seat</th><th>Amount</th><th>Date</th><th>Time</th></tr></thead><tbody>${monthPayments.map((p,i)=>`<tr><td>${i+1}</td><td><strong>${p.name}</strong></td><td>${p.seat}</td><td style="color:#16a34a">₹${p.amount.toLocaleString('en-IN')}</td><td>${fmtDate(p.date)}</td><td style="color:#94a3b8">${fmtTime(p.date)}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="3"><strong>Total</strong></td><td><strong>₹${totalCollected.toLocaleString('en-IN')}</strong></td><td colspan="2">${monthPayments.length} transactions</td></tr></tfoot></table>`:`<div class="${mode==='pdf'?'alert alert-orange':''}">⚠️ Is month koi payment nahi!</div>`}
+<p style="text-align:center;color:#94a3b8;font-size:11px;margin-top:24px;padding-top:12px;border-top:1px solid #e2e8f0">LibraryOS — ${s.settings.libName} | ${monthName}</p>`;
+if(mode==='doc')return buildDocHTML('Monthly Report — '+monthName,body);
+return buildPDFHTML('Monthly Report — '+monthName,body);
+}
+function downloadDoc(filename,html){
+const blob=new Blob(['\ufeff'+html],{type:'application/msword'});
+const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;
+document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+function openPrintWindow(html,title){
+// Blob URL banao
+const blob = new Blob([html], {type:'text/html'});
+const blobUrl = URL.createObjectURL(blob);
+// Android Chrome intent se open karo (Median APK ke liye)
+const chromeIntent = 'intent://' + blobUrl.replace(/^blob:https?:\/\/[^/]+/, '') + '#Intent;scheme=blob;package=com.android.chrome;end';
+// Try: pehle direct window.open, agar fail to Chrome intent
+const win = window.open(blobUrl, '_blank');
+if(!win){
+  // Median WebView mein window.open block hota hai — Chrome pe bhejo
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+setTimeout(()=> URL.revokeObjectURL(blobUrl), 30000);
+}
+function downloadFile(name,content,type){
+const blob=new Blob([content],{type});
+const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+function testCloudConnection(){
+  showToast('Test ho raha hai...','#3b82f6');
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', EDGE_URL + '?apikey=' + encodeURIComponent(ANON_KEY) + '&user_id=test_ping', true);
+  xhr.timeout = 10000;
+  xhr.onreadystatechange = function(){
+    if(xhr.readyState !== 4) return;
+    if(xhr.status === 200) showToast('✅ Cloud connected! Sab sahi hai 🎉','#22c55e');
+    else showToast('❌ Error: HTTP ' + xhr.status,'#ef4444');
+  };
+  xhr.onerror = function(){ showToast('❌ Network error — internet check karo','#ef4444'); };
+  xhr.ontimeout = function(){ showToast('❌ Timeout','#ef4444'); };
+  xhr.send();
+}
+function renderSettings(){
+const s=getState().settings;
+const fullEnabled=s.fullShiftEnabled!==false;
+return'<div class="card col"><div style="font-weight:700;color:#e2e8f0">Library Details</div>'+
+'<div class="settings-row"><span style="color:#94a3b8;font-size:14px">Library Name</span><input class="small-input" id="set-libname" value="'+s.libName+'" style="width:140px"/></div>'+
+'<div class="settings-row"><span style="color:#94a3b8;font-size:14px">Total Seats</span><input class="small-input" id="set-seats" type="number" value="'+s.totalSeats+'" min="1"/></div>'+
+'<button class="primary-btn" style="margin-top:8px" onclick="saveLibSettings()">Save Settings</button>'+
+'<button class="secondary-btn" style="margin-top:8px;width:100%;justify-content:center" onclick="testCloudConnection()">☁️ Test Cloud Connection</button></div>'+
+'<div class="section-label">Shifts</div>'+
+'<div class="card col" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center">'+
+'<div><div style="color:#e2e8f0;font-weight:600;font-size:14px">Full Shift Option</div><div style="color:#64748b;font-size:12px;margin-top:2px">Member add karte time "Full Shift" dikhao</div></div>'+
+'<button onclick="toggleFullShift()" style="background:'+(fullEnabled?'#22c55e':'#334155')+';border:none;border-radius:20px;width:48px;height:26px;position:relative;transition:all .2s;flex-shrink:0">'+
+'<div style="position:absolute;top:3px;'+(fullEnabled?'right:3px':'left:3px')+';width:20px;height:20px;background:#fff;border-radius:50%;transition:all .2s"></div></button>'+
+'</div></div>'+
+'<div id="shifts-list">'+renderShiftsList()+'</div>'+
+'<button class="secondary-btn" style="margin-top:8px" onclick="addShift()">+ Add Shift</button>';
+}
+function saveLibSettings(){
+const s=getState().settings;
+const nameVal=document.getElementById('set-libname').value.trim();
+const seatsVal=Number(document.getElementById('set-seats').value);
+if(nameVal)s.libName=nameVal;
+if(seatsVal>0)s.totalSeats=seatsVal;
+saveSettings(s);
+document.getElementById('sidebar-libname').textContent='📖 '+s.libName;
+logActivity('settings','Library settings update ki gayi');
+showToast('Settings saved! ✅');
+renderPage();
+}
+function toggleFullShift(){
+const s=getState().settings;
+s.fullShiftEnabled=s.fullShiftEnabled===false?true:false;
+saveSettings(s);renderPage();
+}
+function renderShiftsList(){
+const hourOpts=[1,2,3,4,5,6,7,8,9,10,11,12].map(h=>'<option value="'+h+'">'+h+'</option>').join('');
+const minOpts=['00','15','30','45'].map(m=>'<option value="'+m+'">'+m+'</option>').join('');
+return getShifts().map(function(sh,i){
+const parsed=parseShiftMinutes(sh.time)||{start:360,end:600};
+const sMin=parsed.start;const eMin=parsed.end>=1440?parsed.end-1440:parsed.end;
+const sH24=Math.floor(sMin/60);const sMm=sMin%60;
+const sAmpm=sH24>=12?'PM':'AM';const sH12=sH24>12?sH24-12:sH24===0?12:sH24;
+const eH24=Math.floor(eMin/60);const eMm=eMin%60;
+const eAmpm=eH24>=12?'PM':'AM';const eH12=eH24>12?eH24-12:eH24===0?12:eH24;
+const selOpts=function(val,opts){return opts.replace('value="'+val+'"','value="'+val+'" selected');};
+const ampmOpts=function(sel){return'<option value="AM"'+(sel==='AM'?' selected':'')+'>AM</option><option value="PM"'+(sel==='PM'?' selected':'')+'>PM</option>';};
+const selStyle='background:#1e293b;border:1px solid #334155;border-radius:8px;color:#f1f5f9;padding:7px 6px;font-size:13px;outline:none;';
+return'<div style="background:#0a0f1e;border-radius:12px;padding:12px;margin-bottom:8px">'+
+'<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">'+
+'<input class="input" style="flex:1;font-size:13px;padding:8px" value="'+sh.label+'" placeholder="Shift name" onchange="updateShiftLabel('+i+',this.value)"/>'+
+'<button class="delete-btn" onclick="deleteShift('+i+')">🗑</button></div>'+
+'<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">'+
+'<span style="font-size:11px;color:#64748b;width:32px">Start</span>'+
+'<select style="'+selStyle+'" id="sh_'+i+'_sh" onchange="updateShiftFromPicker('+i+')">'+selOpts(String(sH12),hourOpts)+'</select>'+
+'<select style="'+selStyle+'" id="sh_'+i+'_sm" onchange="updateShiftFromPicker('+i+')">'+selOpts(String(sMm).padStart(2,'0'),minOpts)+'</select>'+
+'<select style="'+selStyle+'" id="sh_'+i+'_sa" onchange="updateShiftFromPicker('+i+')">'+ampmOpts(sAmpm)+'</select></div>'+
+'<div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">'+
+'<span style="font-size:11px;color:#64748b;width:32px">End</span>'+
+'<select style="'+selStyle+'" id="sh_'+i+'_eh" onchange="updateShiftFromPicker('+i+')">'+selOpts(String(eH12),hourOpts)+'</select>'+
+'<select style="'+selStyle+'" id="sh_'+i+'_em" onchange="updateShiftFromPicker('+i+')">'+selOpts(String(eMm).padStart(2,'0'),minOpts)+'</select>'+
+'<select style="'+selStyle+'" id="sh_'+i+'_ea" onchange="updateShiftFromPicker('+i+')">'+ampmOpts(eAmpm)+'</select></div>'+
+'<div style="font-size:12px;color:#60a5fa;font-weight:600">⏰ '+sh.time+'</div></div>';
+}).join('');
+}
+function updateShiftLabel(i,val){const s=getState().settings;s.shifts[i].label=val;saveSettings(s);}
+function updateShiftFromPicker(i){
+const g=function(id){const el=document.getElementById(id);return el?el.value:null;};
+const sh=g('sh_'+i+'_sh');const sm=g('sh_'+i+'_sm');const sa=g('sh_'+i+'_sa');
+const eh=g('sh_'+i+'_eh');const em=g('sh_'+i+'_em');const ea=g('sh_'+i+'_ea');
+if(!sh||!sm||!sa||!eh||!em||!ea)return;
+const timeStr=sh+':'+sm+' '+sa+' – '+eh+':'+em+' '+ea;
+const s=getState().settings;s.shifts[i].time=timeStr;saveSettings(s);
+const el=document.getElementById('shifts-list');if(el)el.innerHTML=renderShiftsList();
+}
+function addShift(){const s=getState().settings;s.shifts.push({id:'sh'+Date.now(),label:'New Shift',time:'8:00 AM – 12:00 PM'});saveSettings(s);renderPage();}
+function deleteShift(i){const s=getState().settings;s.shifts.splice(i,1);saveSettings(s);renderPage();}
+function openAddMember(){editingMemberId=null;document.getElementById('addmember-title').textContent='Add New Member';resetAddMemberForm();openModal('modal-addMember');}
+function openAddMemberPrefill(seat,shift){editingMemberId=null;document.getElementById('addmember-title').textContent='Add New Member';resetAddMemberForm();document.getElementById('am-seat').value=seat;document.getElementById('am-shift').value=shift;checkLiveConflict();openModal('modal-addMember');}
+function openEditMember(id){
+editingMemberId=id;
+const m=getState().members.find(x=>x.id===id);
+document.getElementById('addmember-title').textContent='Edit Member';
+resetAddMemberForm();
+document.getElementById('am-name').value=m.name;
+document.getElementById('am-mobile').value=m.mobile;
+document.getElementById('am-seat').value=m.seatNo;
+document.getElementById('am-shift').value=m.shiftId;
+document.getElementById('am-charge').value=m.charge;
+document.getElementById('am-start').value=m.startDate;
+document.getElementById('am-end').value=m.endDate;
+openModal('modal-addMember');
+}
+function resetAddMemberForm(){
+const s=getState().settings;
+const fullEnabled=s.fullShiftEnabled!==false;
+const sel=document.getElementById('am-shift');
+sel.innerHTML=getShifts().map(sh=>'<option value="'+sh.id+'">'+sh.label+' ('+sh.time+')</option>').join('');
+if(fullEnabled)sel.innerHTML+='<option value="sf">Full Shift (Poora Din)</option>';
+if(!editingMemberId){
+['am-name','am-mobile','am-seat','am-charge'].forEach(function(id){document.getElementById(id).value='';});
+sel.value=getShifts()[0]?.id||'s1';
+const todayStr=today();
+document.getElementById('am-start').value=todayStr;
+document.getElementById('am-end').value=nextMonthSameDate(todayStr);
+document.getElementById('am-start').onchange=function(){document.getElementById('am-end').value=nextMonthSameDate(this.value);};
+}
+document.getElementById('am-conflict').style.display='none';
+document.getElementById('am-seat-info').style.display='none';
+document.getElementById('am-seat').oninput=checkLiveConflict;
+document.getElementById('am-shift').onchange=checkLiveConflict;
+}
+function checkLiveConflict(){
+const seatNo=document.getElementById('am-seat').value;
+const shiftId=document.getElementById('am-shift').value;
+const conflictEl=document.getElementById('am-conflict');
+const infoEl=document.getElementById('am-seat-info');
+if(!seatNo||!shiftId){conflictEl.style.display='none';infoEl.style.display='none';return;}
+const existing=activeMembers().filter(m=>String(m.seatNo)===String(seatNo)&&m.id!==editingMemberId);
+if(existing.length>0){
+const booked=existing.map(m=>{const sh=getShift(m.shiftId);return'<span style="color:#a78bfa">'+sh.label+'</span> → '+m.name;}).join('<br>');
+infoEl.innerHTML='<div style="background:#1e1b4b;border-radius:8px;padding:8px 10px;color:#94a3b8;font-size:12px">🪑 Seat '+seatNo+' mein already:<br>'+booked+'</div>';
+infoEl.style.display='block';
+}else{infoEl.style.display='none';}
+conflictEl.style.display=isShiftConflict(seatNo,shiftId,editingMemberId)?'block':'none';
+}
+function submitAddMember(){
+const name=document.getElementById('am-name').value.trim();
+const mobile=document.getElementById('am-mobile').value.trim();
+const seatNo=Number(document.getElementById('am-seat').value);
+const shiftId=document.getElementById('am-shift').value;
+const charge=Number(document.getElementById('am-charge').value);
+const startDate=document.getElementById('am-start').value;
+const endDate=document.getElementById('am-end').value;
+if(!name||!mobile||!seatNo||!charge||!endDate){alert('Sab fields bharo!');return;}
+if(!editingMemberId&&isShiftConflict(seatNo,shiftId,null)){document.getElementById('am-conflict').style.display='block';checkLiveConflict();return;}
+const s=getState();
+if(!editingMemberId){
+s.members.push({id:s.nextId,name,mobile,seatNo,shiftId,charge,startDate,endDate,paidAmount:0,payments:[],addedAt:new Date().toISOString(),deleted:false});
+saveNextId(s.nextId+1);
+logActivity('member_add',name+' ko Seat '+seatNo+' mein add kiya');
+}else{
+const m=s.members.find(x=>x.id===editingMemberId);
+if(m){m.name=name;m.mobile=mobile;m.seatNo=seatNo;m.shiftId=shiftId;m.charge=charge;m.startDate=startDate;m.endDate=endDate;}
+logActivity('member_add',name+' ki details update ki gayi');
+}
+saveMembers(s.members);
+showToast(editingMemberId?'Member updated! ✅':'Member added! ✅');
+closeModal('modal-addMember');renderPage();
+}
+function openPayment(id){
+payingMemberId=id;
+const m=getState().members.find(x=>x.id===id);
+const pending=m.charge-(m.paidAmount||0);
+document.getElementById('modal-payment-body').innerHTML=
+'<div style="margin-bottom:14px"><div style="font-weight:700;color:#e2e8f0;font-size:16px">'+m.name+'</div><div style="font-size:13px;color:#94a3b8;margin-top:2px">Seat '+m.seatNo+' · Total: '+fmtCur(m.charge)+' · Paid: '+fmtCur(m.paidAmount)+'</div></div>'+
+'<div style="background:#1c0a00;border-radius:10px;padding:12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center"><span style="color:#94a3b8;font-size:13px">Amount Due</span><span style="color:#fb923c;font-weight:900;font-size:20px">'+fmtCur(pending)+'</span></div>'+
+'<div class="field"><label>Amount Received (₹)</label><input class="input" id="pay-amount" type="number" value="'+pending+'"/></div>'+
+'<button class="primary-btn" style="width:100%;justify-content:center" onclick="submitPayment()">✅ Confirm Payment</button>';
+openModal('modal-payment');
+}
+function submitPayment(){
+const amt=Number(document.getElementById('pay-amount').value);
+if(!amt||amt<=0)return;
+const s=getState();const m=s.members.find(x=>x.id===payingMemberId);
+m.paidAmount=(m.paidAmount||0)+amt;
+m.payments=[...(m.payments||[]),{amount:amt,date:new Date().toISOString()}];
+saveMembers(s.members);
+logActivity('payment',m.name+' ne ₹'+amt+' payment di (Seat '+m.seatNo+')');
+showToast('Payment recorded! ✅');closeModal('modal-payment');renderPage();
+}
+function openAddExpense(){document.getElementById('ex-name').value='';document.getElementById('ex-amount').value='';document.getElementById('ex-date').value=today();openModal('modal-expense');}
+function submitExpense(){
+const name=document.getElementById('ex-name').value.trim();
+const amount=Number(document.getElementById('ex-amount').value);
+const date=document.getElementById('ex-date').value;
+if(!name||!amount)return;
+const s=getState();
+s.expenses.push({id:Date.now(),name,amount,date,addedAt:new Date().toISOString()});
+saveExpenses(s.expenses);
+logActivity('expense','₹'+amount+' ka expense: '+name);
+showToast('Expense added!');closeModal('modal-expense');renderPage();
+}
+function deleteExpense(id){
+const s=getState();const e=s.expenses.find(x=>x.id===id);
+s.expenses=s.expenses.filter(x=>x.id!==id);
+saveExpenses(s.expenses);
+if(e)logActivity('expense',e.name+' ka expense delete kiya');
+showToast('Deleted.','#ef4444');renderPage();
+}
+function openDetail(id){
+const m=getState().members.find(x=>x.id===id);
+const sh=getShift(m.shiftId);
+const pending=m.charge-(m.paidAmount||0);
+const daysLeft=daysBetween(today(),m.endDate);
+const payMsg='Namaskar '+m.name+' ji 🙏\n\nLibrary payment pending hai.\n💺 Seat: '+m.seatNo+'\n💰 Pending: ₹'+pending+'\n📅 End: '+fmtDate(m.endDate)+'\n\nKripya jaldi payment karein.\nDhanyawad 🙏';
+const renewMsg='Namaskar '+m.name+' ji 🙏\n\n'+(daysLeft<0?'Aapki membership expire ho gayi hai.':'Aapki membership '+daysLeft+' din mein expire hogi.')+'\n💺 Seat: '+m.seatNo+'\n📅 End: '+fmtDate(m.endDate)+'\n\nRenewal ke liye aayein.\nDhanyawad 🙏';
+const shiftDisplay=sh.label+(sh.time?' ('+sh.time+')':'');
+let html='<div style="text-align:center;margin-bottom:16px"><div class="member-avatar" style="width:56px;height:56px;font-size:24px;margin:0 auto 8px">'+m.name[0]+'</div><div style="font-weight:800;font-size:18px;color:#f1f5f9">'+m.name+'</div><div style="font-size:13px;color:#94a3b8">'+m.mobile+'</div></div>';
+[['Seat','Seat '+m.seatNo],['Shift',shiftDisplay],['Charge',fmtCur(m.charge)],['Paid',fmtCur(m.paidAmount)],['Pending',fmtCur(pending)],['Start',fmtDate(m.startDate)],['End',fmtDate(m.endDate)],['Joined',fmtDT(m.addedAt)]].forEach(function(r){
+html+='<div class="detail-row"><span style="color:#64748b;font-size:13px">'+r[0]+'</span><span style="color:#e2e8f0;font-weight:600;font-size:13px">'+r[1]+'</span></div>';
+});
+html+='<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">';
+if(pending>0)html+='<button class="wa-btn" onclick="openWA(\''+m.mobile+'\',\''+payMsg.replace(/'/g,"\\'").replace(/\n/g,'\\n')+'\')">💬 Payment</button>';
+if(daysLeft<=4)html+='<button class="wa-btn" style="border-color:#f97316;color:#fb923c" onclick="openWA(\''+m.mobile+'\',\''+renewMsg.replace(/'/g,"\\'").replace(/\n/g,'\\n')+'\')">💬 Renewal</button>';
+html+='</div><div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">';
+if(pending>0)html+='<button class="primary-btn" style="flex:1;justify-content:center" onclick="closeModal(\'modal-detail\');openPayment('+m.id+')">💰 Pay</button>';
+if(daysLeft<=0)html+='<button class="renew-btn" style="padding:10px;border-radius:10px;font-size:13px" onclick="closeModal(\'modal-detail\');openRenewModal('+m.id+')">🔄 Renew</button>';
+html+='<button class="edit-btn" style="flex:1;justify-content:center;padding:10px;border-radius:10px" onclick="closeModal(\'modal-detail\');openEditMember('+m.id+')">✏️ Edit</button>'+
+'<button class="delete-btn" style="flex:1;padding:10px;border-radius:10px;justify-content:center" onclick="confirmDeleteMember('+m.id+',\''+m.name.replace(/'/g,"\\'")+'\')">🗑</button></div>';
+document.getElementById('modal-detail-body').innerHTML=html;
+openModal('modal-detail');
+}
+function openRenewModal(id){
+const m=getState().members.find(x=>x.id===id);if(!m)return;
+const sh=getShift(m.shiftId);
+const daysLeft=daysBetween(today(),m.endDate);
+const newStart=m.endDate;const newEnd=nextMonthSameDate(newStart);
+document.getElementById('modal-renew-body').innerHTML=
+'<div style="text-align:center;margin-bottom:16px"><div class="member-avatar" style="width:52px;height:52px;font-size:22px;margin:0 auto 8px">'+m.name[0]+'</div><div style="font-weight:800;font-size:17px;color:#f1f5f9">'+m.name+'</div><div style="font-size:12px;color:#94a3b8">Seat '+m.seatNo+' · '+sh.label+'</div></div>'+
+'<div style="background:#0a0f1e;border-radius:12px;padding:12px;margin-bottom:12px"><div style="font-size:11px;color:#64748b;margin-bottom:4px;font-weight:700;text-transform:uppercase">Purana Period</div><div style="font-size:13px;color:#94a3b8">'+fmtDate(m.startDate)+' → '+fmtDate(m.endDate)+'</div><div style="font-size:12px;color:'+(daysLeft<0?'#f87171':'#fb923c')+';margin-top:4px">'+(daysLeft<0?'⛔ '+Math.abs(daysLeft)+' din pehle expire hua':'⚠️ '+daysLeft+' din baaki')+'</div></div>'+
+'<div style="background:#052e16;border-radius:12px;padding:12px;margin-bottom:12px"><div style="font-size:11px;color:#4ade80;margin-bottom:4px;font-weight:700;text-transform:uppercase">Naya Period (Auto)</div><div style="font-size:15px;color:#4ade80;font-weight:700">'+fmtDate(newStart)+' → '+fmtDate(newEnd)+'</div></div>'+
+'<div class="field"><label>Naya Start Date</label><input class="input" id="renew-start" type="date" value="'+newStart+'" oninput="updateRenewEnd(this.value)"/></div>'+
+'<div class="field"><label>Naya End Date</label><input class="input" id="renew-end" type="date" value="'+newEnd+'"/></div>'+
+'<div style="background:#1c0a00;border-radius:10px;padding:10px;margin-bottom:14px;font-size:12px;color:#fb923c">⚠️ Renew hone par payment ₹0 ho jayegi. Pehle payment collect kar lo.</div>'+
+'<button class="primary-btn" style="width:100%;justify-content:center" onclick="submitRenew('+m.id+')">✅ Confirm Renew</button>';
+openModal('modal-renew');
+}
+function updateRenewEnd(val){const el=document.getElementById('renew-end');if(val&&el)el.value=nextMonthSameDate(val);}
+function submitRenew(id){
+const newStart=document.getElementById('renew-start')?.value;
+const newEnd=document.getElementById('renew-end')?.value;
+if(!newStart||!newEnd){alert('Dates bharo!');return;}
+const s=getState();const m=s.members.find(x=>x.id===id);if(!m)return;
+m.startDate=newStart;m.endDate=newEnd;m.paidAmount=0;m.payments=[];
+saveMembers(s.members);
+logActivity('renew',m.name+' renew — '+fmtDate(newStart)+' se '+fmtDate(newEnd)+' tak');
+showToast(m.name+' renew ho gaya! ✅');
+closeModal('modal-renew');renderPage();
+}
+function confirmDeleteMember(id,name){
+const titleEl=document.getElementById('confirm-title');
+const msgEl=document.getElementById('confirm-msg');
+const btnEl=document.getElementById('confirm-ok-btn');
+if(titleEl)titleEl.textContent='🗑 Remove Member?';
+if(msgEl)msgEl.textContent='"'+name+'" ko library se remove karein?';
+if(btnEl)btnEl.onclick=function(){
+const s=getState();const m=s.members.find(x=>x.id===id);
+if(m){m.deleted=true;m.deletedAt=new Date().toISOString();}
+saveMembers(s.members);
+logActivity('member_del',name+' ko remove kiya gaya');
+showToast('Member remove ho gaya.','#ef4444');
+closeModal('modal-confirm');closeModal('modal-detail');closeModal('modal-list');
+renderPage();
+};
+openModal('modal-confirm');
+}
+checkSession();
+</script>
+</body>
+</html>
