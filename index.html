@@ -149,14 +149,9 @@ input:focus, select:focus{border-color:#3b82f6 !important;box-shadow:0 0 0 3px r
 .activity-item{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
 .activity-item:last-child{border-bottom:none;padding-bottom:0;}
 .act-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;box-shadow:0 4px 8px rgba(0,0,0,0.2);}
-
-@media print {
-  body * { visibility: hidden; }
-  #print-area, #print-area * { visibility: visible; }
-  #print-area { position: absolute; left: 0; top: 0; width: 100%; }
-  .no-print { display: none !important; }
-}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 <div class="login-page" id="login-page">
@@ -262,7 +257,6 @@ input:focus, select:focus{border-color:#3b82f6 !important;box-shadow:0 0 0 3px r
 </div>
 </div>
 <div class="toast" id="toast"></div>
-<div id="print-area"></div>
 <script>
 // ═══════════════════════════════════════════════════════
 // CLOUD CONFIG — Supabase Edge Function (CORS fixed)
@@ -1191,19 +1185,19 @@ function renderExport(){
 return`<div class="section-label">📋 Members Report</div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
 <button class="export-btn-item" onclick="exportMembersDoc()">📄<span>Members DOC</span></button>
-<button class="export-btn-item" onclick="exportMembersPDF()">📕<span>Members PDF</span></button>
+<button class="export-btn-item" onclick="exportMembersPDF()">📥<span>Members PDF</span></button>
 </div>
 <div class="section-label">🧾 Expenses Report</div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
 <button class="export-btn-item" onclick="exportExpensesDoc()">📄<span>Expenses DOC</span></button>
-<button class="export-btn-item" onclick="exportExpensesPDF()">📕<span>Expenses PDF</span></button>
+<button class="export-btn-item" onclick="exportExpensesPDF()">📥<span>Expenses PDF</span></button>
 </div>
 <div class="section-label">📊 Monthly Report</div>
 <div class="field" style="margin-top:8px"><label>Select Month</label>
 <input class="input" id="report-month" type="month" value="${today().substr(0,7)}"/></div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
 <button class="export-btn-item" onclick="exportMonthlyDoc()">📄<span>Monthly DOC</span></button>
-<button class="export-btn-item" onclick="exportMonthlyPDF()">📕<span>Monthly PDF</span></button>
+<button class="export-btn-item" onclick="exportMonthlyPDF()">📥<span>Monthly PDF</span></button>
 </div>
 `;
 }
@@ -1221,7 +1215,7 @@ const am=activeMembers();
 const rows=am.map((m,i)=>{const sh=getShift(m.shiftId);const p=m.charge-(m.paidAmount||0);return`<tr><td>${i+1}</td><td><strong>${m.name}</strong><br><small>${m.mobile}</small></td><td>${m.seatNo}</td><td>${sh.label}</td><td>₹${(m.charge||0).toLocaleString('en-IN')}</td><td style="color:#16a34a">₹${(m.paidAmount||0).toLocaleString('en-IN')}</td><td style="color:${p>0?'#dc2626':'#16a34a'}">${p>0?'₹'+p.toLocaleString('en-IN'):'Paid ✓'}</td><td>${fmtDate(m.startDate)}</td><td>${fmtDate(m.endDate)}</td></tr>`;}).join('');
 const s=getState();
 openPrintWindow(buildPDFHTML('Members List',`<div class="pdf-header"><h1>📖 ${s.settings.libName}</h1><p>Members Report — ${fmtDT(new Date().toISOString())}</p></div><table><thead><tr><th>#</th><th>Member</th><th>Seat</th><th>Shift</th><th>Charge</th><th>Paid</th><th>Pending</th><th>Start</th><th>End</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="4"><strong>Total</strong></td><td><strong>₹${am.reduce((x,m)=>x+(m.charge||0),0).toLocaleString('en-IN')}</strong></td><td><strong>₹${am.reduce((x,m)=>x+(m.paidAmount||0),0).toLocaleString('en-IN')}</strong></td><td><strong>₹${am.reduce((x,m)=>x+(m.charge-(m.paidAmount||0)),0).toLocaleString('en-IN')}</strong></td><td colspan="2"></td></tr></tfoot></table>`),'Members_List');
-showToast('PDF print dialog khul gaya! ✅');
+showToast('Report download ho rahi hai! 📥','#22c55e');
 }
 function exportExpensesDoc(){
 const s=getState();const total=s.expenses.reduce((x,e)=>x+e.amount,0);
@@ -1233,7 +1227,7 @@ function exportExpensesPDF(){
 const s=getState();const total=s.expenses.reduce((x,e)=>x+e.amount,0);
 const rows=[...s.expenses].reverse().map((e,i)=>`<tr><td>${i+1}</td><td><strong>${e.name}</strong></td><td>${fmtDate(e.date)}</td><td style="color:#dc2626">₹${e.amount.toLocaleString('en-IN')}</td></tr>`).join('');
 openPrintWindow(buildPDFHTML('Expenses',`<div class="pdf-header"><h1>📖 ${s.settings.libName}</h1><p>Expenses — ${fmtDT(new Date().toISOString())}</p></div><table><thead><tr><th>#</th><th>Expense</th><th>Date</th><th>Amount</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3"><strong>Total</strong></td><td><strong style="color:#dc2626">₹${total.toLocaleString('en-IN')}</strong></td></tr></tfoot></table>`),'Expenses');
-showToast('PDF print dialog khul gaya! ✅');
+showToast('Report download ho rahi hai! 📥','#22c55e');
 }
 function exportMonthlyDoc(){
 const month=(document.getElementById('report-month')?.value)||today().substr(0,7);
@@ -1243,7 +1237,7 @@ showToast('Monthly DOC ready! ✅');
 function exportMonthlyPDF(){
 const month=(document.getElementById('report-month')?.value)||today().substr(0,7);
 openPrintWindow(buildMonthlyHTML(month,'pdf'),'Monthly_'+month);
-showToast('PDF print dialog khul gaya! ✅');
+showToast('Report download ho rahi hai! 📥','#22c55e');
 }
 function buildDocHTML(title,body){
 return`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${title}</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#1e293b;max-width:900px;margin:0 auto}table{width:100%;border-collapse:collapse;margin-top:12px}th{background:#1e3a5f;color:#fff;padding:10px 12px;text-align:left;font-size:12px;text-transform:uppercase}td{padding:9px 12px;border-bottom:1px solid #e2e8f0;font-size:13px}tfoot td{background:#f0f9ff;font-weight:700;border-top:2px solid #bae6fd;color:#0ea5e9}tr:nth-child(even) td{background:#f8fafc}.sum-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e2e8f0;font-size:13px}</style></head><body>${body}</body></html>`;
@@ -1257,7 +1251,7 @@ return`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${title}</title>
   if(btn)btn.style.display='block';
 };<\/script></head><body>
 <div id="dl-btn" style="display:none;width:100%;padding:16px;box-sizing:border-box;position:sticky;top:0;z-index:9999;background:#1a1a2e;border-bottom:2px solid #3b82f6;text-align:center">
-<button ontouchstart="" onclick="if(window.median){window.median.print.print();}else if(window.gonative){window.gonative.print.print();}else{window.print();}" style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border:none;border-radius:12px;padding:16px 32px;font-size:16px;font-weight:800;cursor:pointer;width:80%;max-width:300px;-webkit-tap-highlight-color:transparent;touch-action:manipulation">🖨️ Print / Save PDF</button>
+<button ontouchstart="" onclick="window.print()" style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border:none;border-radius:12px;padding:16px 32px;font-size:16px;font-weight:800;cursor:pointer;width:80%;max-width:300px;-webkit-tap-highlight-color:transparent;touch-action:manipulation">🖨️ Print / Save PDF</button>
 </div>
 ${body}</body></html>`;
 }
@@ -1310,53 +1304,29 @@ ${monthPayments.length>0?`<div class="${mode==='pdf'?'sec-title':''}">💳 Payme
 if(mode==='doc')return buildDocHTML('Monthly Report — '+monthName,body);
 return buildPDFHTML('Monthly Report — '+monthName,body);
 }
-function b64(str){return btoa(unescape(encodeURIComponent(str)));}
 function downloadDoc(filename,html){
-  const isAPK = (window.median || window.gonative || (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.median));
-  if(isAPK){
-    showToast('APK: File taiyar ho rahi hai...', '#3b82f6');
-    try {
-      const b64Data = b64(html);
-      const bridge = window.median || window.gonative;
-      if(bridge && bridge.share) bridge.share.shareFile({filename: filename, base64: b64Data, mimeType: 'application/msword'});
-      else showToast('APK: Share plugin enabled nahi hai.', '#ef4444');
-    } catch(e) { showToast('APK Error: ' + e.message, '#ef4444'); }
-  } else {
-    const blob = new Blob([html], {type:'application/msword'});
-    const url = URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download=filename;
-    document.body.appendChild(a);a.click();document.body.removeChild(a);
-    setTimeout(()=>URL.revokeObjectURL(url),2000);
-  }
+const blob=new Blob(['\ufeff'+html],{type:'application/msword'});
+const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;
+document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 function openPrintWindow(html,title){
-  const isAPK = (window.median || window.gonative || (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.median));
-  if(isAPK){
-    showToast('APK: Export menu...', '#3b82f6');
-    try {
-      const bridge = window.median || window.gonative;
-      const b64Data = b64(html);
-      if(bridge && bridge.share) {
-        bridge.share.shareFile({filename: title + '.html', base64: b64Data, mimeType: 'text/html'});
-      } else if(bridge && bridge.print) {
-        bridge.print.printHTML({html: html});
-      } else { showToast('APK: Bridge plugins missing.', '#ef4444'); }
-    } catch(e) { showToast('APK Error: ' + e.message, '#ef4444'); }
-  } else {
-    showToast('Browser: Print Mode chalu... ⏳', '#3b82f6');
-    // HTML content ko safe-keep karein
-    localStorage.setItem('print_html_content', html);
-    // Page reload karein flag ke saath
-    const url = new URL(window.location.href);
-    url.searchParams.set('print', 'true');
-    window.location.href = url.toString();
-  }
-}function downloadFile(name,content,type){
-  const blob = new Blob([content], {type:type});
-  const url = URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download=name;
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url),2000);
+// HTML string se direct download — no print dialog needed
+const blob = new Blob([html], {type:'text/html'});
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = (title||'report').replace(/[^a-z0-9]/gi,'_').toLowerCase() + '.html';
+a.style.display = 'none';
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+setTimeout(function(){ URL.revokeObjectURL(url); }, 5000);
+showToast('File download ho rahi hai! 📥','#22c55e');
+}
+function downloadFile(name,content,type){
+const blob=new Blob([content],{type});
+const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 function testCloudConnection(){
   showToast('Test ho raha hai...','#3b82f6');
@@ -1628,33 +1598,7 @@ renderPage();
 };
 openModal('modal-confirm');
 }
-function checkPrintMode(){
-  const params = new URLSearchParams(window.location.search);
-  if(params.get('print') === 'true'){
-    const html = localStorage.getItem('print_html_content');
-    if(html){
-      const area = document.getElementById('print-area');
-      area.innerHTML = html;
-      // Image ki tarah 700ms ka delay
-      setTimeout(function(){
-        window.print();
-        // Print ke baad cleanup
-        setTimeout(function(){
-          area.innerHTML = '';
-          localStorage.removeItem('print_html_content');
-          const url = new URL(window.location.href);
-          url.searchParams.delete('print');
-          window.location.href = url.toString();
-        }, 1000);
-      }, 700);
-      return true; // Print mode active hai
-    }
-  }
-  return false;
-}
-if(!checkPrintMode()){
-  checkSession();
-}
+checkSession();
 </script>
 </body>
 </html>
